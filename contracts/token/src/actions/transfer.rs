@@ -19,7 +19,7 @@ pub fn transfer(mut state: Inner, input: TransferInput, caller: String) -> State
 
     let caller_balance = balances.get_mut(&caller).unwrap();
 
-    if *caller_balance < amount { panic!("Not enough balance to transfer"); };
+    // if *caller_balance < amount { panic!("Not enough balance to transfer"); };
 
     *caller_balance -= amount;
 
@@ -29,5 +29,5 @@ pub fn transfer(mut state: Inner, input: TransferInput, caller: String) -> State
         balances.insert(target, amount);
     };
 
-    return State::New(state);
+    return State::New { state };
 }

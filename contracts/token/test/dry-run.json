@@ -7,7 +7,8 @@
         "decimals": 9,
         "balances": {
             "dRFuVE-s6-TgmykU4Zqn246AR2PIsf3HhBhZ0t5-WXE": 100000000
-        }
+        },
+        "allowances": {}
     },
     "interactions": [
         {

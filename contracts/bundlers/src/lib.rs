@@ -56,6 +56,7 @@ pub fn handle(state: State, action: Value) -> State {
 
     let inner = match state {
         State::New(inner) => inner,
+        #[allow(unreachable_patterns)]
         _ => panic!("Must provide correct state for transfer"),
     };
 

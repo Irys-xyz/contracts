@@ -3,7 +3,7 @@ members = [
     "./bundlers",
     "./token",
     "./validators",
-    "./delegators"
+    "./stakers"
 ]
 resolver = "2"
 

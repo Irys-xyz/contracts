@@ -13,7 +13,8 @@ pub struct Inner {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum State {
-    New(Inner),
+    New { state: Inner },
     Balance(u64)
 }

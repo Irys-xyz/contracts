@@ -58,7 +58,7 @@ fn handler(state: State, action: Action) -> State {
     let Action { input, caller } = action;
 
     let inner = match state {
-        State::New(inner) => inner,
+        State::New { state } => state,
         _ => panic!("Must provide correct state for transfer"),
     };
 
