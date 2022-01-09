@@ -1,6 +1,6 @@
 use std::{panic, slice::SliceIndex};
 
-use actions::{transfer::{transfer, TransferInput}, balance::{balance, BalanceInput}};
+use actions::{transfer::{transfer, TransferInput}, balance::{balance, BalanceInput}, approve::{approve, ApproveInput}, transfer_from::{transfer_from, TransferFromInput}};
 use serde::Deserialize;
 use serde_json::Value;
 use state::State;
@@ -50,6 +50,12 @@ pub enum Input {
   },
   Balance {
     input: BalanceInput,
+  },
+  Approve {
+    input: ApproveInput
+  },
+  TransferFrom {
+    input: TransferFromInput
   }
 }
 
@@ -58,17 +64,16 @@ fn handler(state: State, action: Action) -> State {
     let Action { input, caller } = action;
 
     let inner = match state {
-        State::New { state } => state,
+        State::New(state) => state,
         _ => panic!("Must provide correct state for transfer"),
     };
+    let inner = inner.clone();
 
     match input {
-        Input::Transfer { input } => {
-            transfer(inner, input, caller)
-        },
-        Input::Balance { input } => {
-            balance(inner, input)
-        },
+        Input::Transfer { input } => transfer(inner, input, caller),
+        Input::Balance { input } => balance(inner, input),
+        Input::Approve { input } => approve(inner, input, caller),
+        Input::TransferFrom { input } => transfer_from(inner, input, caller),
     }
 }
 

@@ -1,25 +1,28 @@
+// token/src/actions/transfer.rs
 use core::panic;
 use serde::Deserialize;
 
-use crate::state::{State, Inner};
+use crate::state::{Inner, State};
 
 #[derive(Deserialize)]
 pub struct TransferInput {
     amount: u64,
-    target: String
+    target: String,
 }
 
 pub fn transfer(mut state: Inner, input: TransferInput, caller: String) -> State {
-
     let TransferInput { amount, target } = input;
 
-    if amount == 0 { panic!("Must transfer > 0 BNDLR") };
+    if amount == 0 {
+        panic!("Must transfer > 0 BNDLR")
+    };
 
     let balances = &mut state.balances;
+    let mut caller_balance = balances.get_mut(&caller).unwrap();
 
-    let caller_balance = balances.get_mut(&caller).unwrap();
-
-    // if *caller_balance < amount { panic!("Not enough balance to transfer"); };
+    if *caller_balance < amount {
+        panic!("Not enough balance to transfer");
+    };
 
     *caller_balance -= amount;
 
@@ -29,5 +32,5 @@ pub fn transfer(mut state: Inner, input: TransferInput, caller: String) -> State
         balances.insert(target, amount);
     };
 
-    return State::New { state };
+    State::New(state)
 }

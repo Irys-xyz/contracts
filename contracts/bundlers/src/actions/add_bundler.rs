@@ -8,11 +8,12 @@ use crate::state::{State, Inner, Bundler};
 #[derive(Deserialize)]
 pub struct AddBundlerInput {
     url: String,
-    amount: u64
+    amount: u64,
+    pool_amount: u64
 }
 
 pub fn add_bundler(mut inner: Inner, input: AddBundlerInput, caller: String) -> State {
-    let AddBundlerInput { url, amount } = input;
+    let AddBundlerInput { url, amount, pool_amount } = input;
 
     let bundlers = &mut inner.bundlers;
 
@@ -32,6 +33,7 @@ pub fn add_bundler(mut inner: Inner, input: AddBundlerInput, caller: String) -> 
     let bundler = Bundler {
         url,
         amount,
+        staking_pool_amount: pool_amount
     };
 
     bundlers.insert(caller, bundler);

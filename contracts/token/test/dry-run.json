@@ -1,6 +1,6 @@
 {
     "contractType": "WASM",
-    "contractSource": "./target/wasm32-unknown-unknown/release/token.wasm",
+    "contractSource": "./token.wasm",
     "initialState": {
         "owner": "dRFuVE-s6-TgmykU4Zqn246AR2PIsf3HhBhZ0t5-WXE",
         "total_supply": 100000000,

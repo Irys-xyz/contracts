@@ -26,5 +26,6 @@ pub enum State {
 #[derive(Serialize, Deserialize)]
 pub struct Bundler {
     pub url: String,
-    pub amount: u64
+    pub amount: u64,
+    pub staking_pool_amount: u64
 }
