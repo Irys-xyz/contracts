@@ -1,34 +1,24 @@
-use crate::action::{Action, ActionResult};
-use crate::actions::balance::balance;
-use crate::actions::evolve::evolve;
-use crate::actions::foreign_read::{foreign_read};
-use crate::actions::foreign_write::foreign_write;
-use crate::actions::transfer::transfer;
+use crate::action::{Action, ActionResult, Address, QueryResponseMsg};
+use crate::actions::queries::{balance, decimals, name, symbol, total_supply};
+use crate::error::ContractError;
 use crate::state::State;
 
 pub async fn handle(current_state: State, action: Action) -> ActionResult {
-    /*
-    Example of accessing functions imported from js:
-
-    log("log from contract");
-    Transaction::id();
-    Transaction::owner();
-    Transaction::target();
-
-    Contract::id();
-    Contract::owner();
-
-    Block::height();
-    Block::indep_hash();
-    Block::timestamp();
-
-    SmartWeave:caller();
-    */
     match action {
-        Action::Transfer { qty, target } => transfer(current_state, qty, target),
-        Action::Balance { target } => balance(current_state, target),
-        Action::Evolve { value } => evolve(current_state, value),
-        Action::ForeignRead { contract_tx_id } => foreign_read(current_state, contract_tx_id).await,
-        Action::ForeignWrite { contract_tx_id, qty, target } => foreign_write(current_state, contract_tx_id, qty, target).await,
+        Action::BalanceOf { target } => {
+            if let Ok(address) = Address::try_from(target.as_str()) {
+                balance(current_state, &address)
+            } else {
+                Err(ContractError::InvalidAddress(target.to_string()))
+            }
+        }
+        Action::Name => name(current_state),
+        Action::Symbol => symbol(current_state),
+        Action::Decimals => decimals(current_state),
+        Action::TotalSupply => total_supply(current_state),
+        Action::Allowance { target, spender } => todo!(),
+        Action::Transfer { to, amount } => todo!(),
+        Action::TransferFrom { from, to, amount } => todo!(),
+        Action::Approve { spender, amount } => todo!(),
     }
 }

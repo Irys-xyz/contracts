@@ -1,38 +1,136 @@
-import fs from 'fs';
+import fs from "fs";
 
-import ArLocal from 'arlocal';
-import Arweave from 'arweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
+import ArLocal from "arlocal";
+import Arweave from "arweave";
+import { JWKInterface } from "arweave/node/lib/wallet";
 import {
   getTag,
-  InteractionResult,
+  Contract,
+  HandlerBasedContract,
   LoggerFactory,
-  PstContract,
-  PstState,
   SmartWeave,
   SmartWeaveNodeFactory,
   SmartWeaveTags,
-} from 'redstone-smartweave';
-import path from 'path';
-import { addFunds, mineBlock } from '../utils';
+} from "redstone-smartweave";
+import path from "path";
+import { addFunds, mineBlock } from "../utils";
 
 jest.setTimeout(30000);
 
-describe('Testing the Profit Sharing Token', () => {
+class TokenState {
+  ticker: string;
+  name: string | null | unknown;
+  decimals: number;
+  totalSupply: bigint;
+  owner: string;
+  balances: {
+    [key: string]: bigint;
+  };
+}
+
+class Balance {
+  ticker: string;
+  target: string;
+  balance: bigint;
+
+  constructor({
+    ticker,
+    target,
+    balance,
+  }: {
+    ticker: string;
+    target: string;
+    balance: string;
+  }) {
+    this.ticker = ticker;
+    this.target = target;
+    this.balance = BigInt(balance);
+  }
+}
+
+interface TokenContract extends Contract<TokenState> {
+  balanceOf(target: string): Promise<Balance>;
+  currentState(): Promise<TokenState>;
+  name(): Promise<string | null | unknown>;
+  symbol(): Promise<string>;
+  decimals(): Promise<number>;
+  totalSupply(): Promise<bigint>;
+}
+
+class TokenContractImpl
+  extends HandlerBasedContract<TokenState>
+  implements TokenContract
+{
+  async currentState() {
+    return (await super.readState()).state;
+  }
+  async name() {
+    const interactionResult = await this.viewState({
+      function: "name",
+    });
+    if (interactionResult.type !== "ok") {
+      throw Error(interactionResult.errorMessage);
+    }
+    return interactionResult.result as string;
+  }
+  async symbol() {
+    const interactionResult = await this.viewState({
+      function: "symbol",
+    });
+    if (interactionResult.type !== "ok") {
+      throw Error(interactionResult.errorMessage);
+    }
+    return interactionResult.result as string;
+  }
+  async decimals() {
+    const interactionResult = await this.viewState({
+      function: "decimals",
+    });
+    if (interactionResult.type !== "ok") {
+      throw Error(interactionResult.errorMessage);
+    }
+    return interactionResult.result as number;
+  }
+  async totalSupply() {
+    const interactionResult = await this.viewState({
+      function: "totalSupply",
+    });
+    if (interactionResult.type !== "ok") {
+      throw Error(interactionResult.errorMessage);
+    }
+    return BigInt(interactionResult.result as string);
+  }
+  async balanceOf(target) {
+    const interactionResult = await this.viewState({
+      function: "balanceOf",
+      target,
+    });
+    if (interactionResult.type !== "ok") {
+      throw Error(interactionResult.errorMessage);
+    }
+    return new Balance(
+      interactionResult.result as {
+        ticker: string;
+        target: string;
+        balance: string;
+      }
+    );
+  }
+}
+
+describe("Test Token", () => {
   let contractSrc: Buffer;
 
   let wallet: JWKInterface;
   let walletAddress: string;
 
-  let initialState: PstState;
+  let initialState: TokenState;
 
   let arweave: Arweave;
   let arlocal: ArLocal;
   let smartweave: SmartWeave;
-  let pst: PstContract;
-  let pst2: PstContract;
+  let token: TokenContract;
 
-  let foreignContractTxId: string;
   let contractTxId: string;
 
   beforeAll(async () => {
@@ -42,14 +140,14 @@ describe('Testing the Profit Sharing Token', () => {
     await arlocal.start();
 
     arweave = Arweave.init({
-      host: 'localhost',
+      host: "localhost",
       port: 1820,
-      protocol: 'http',
+      protocol: "http",
     });
 
-    LoggerFactory.INST.logLevel('error');
-    //LoggerFactory.INST.logLevel('debug', 'WASM:Rust');
-    //LoggerFactory.INST.logLevel('debug', 'WasmContractHandlerApi');
+    LoggerFactory.INST.logLevel("error");
+    // LoggerFactory.INST.logLevel("debug", "WASM:Rust");
+    // LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
@@ -58,10 +156,10 @@ describe('Testing the Profit Sharing Token', () => {
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractSrc = fs.readFileSync(
-      path.join(__dirname, '../pkg/rust-contract_bg.wasm')
+      path.join(__dirname, "../pkg/rust-contract_bg.wasm")
     );
-    const stateFromFile: PstState = JSON.parse(
-      fs.readFileSync(path.join(__dirname, './data/token-pst.json'), 'utf8')
+    const stateFromFile: TokenState = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "./data/token.json"), "utf8")
     );
 
     initialState = {
@@ -69,8 +167,7 @@ describe('Testing the Profit Sharing Token', () => {
       ...{
         owner: walletAddress,
         balances: {
-          ...stateFromFile.balances,
-          [walletAddress]: 555669,
+          [walletAddress]: stateFromFile.totalSupply,
         },
       },
     };
@@ -82,42 +179,19 @@ describe('Testing the Profit Sharing Token', () => {
         initState: JSON.stringify(initialState),
         src: contractSrc,
       },
-      path.join(__dirname, '../src'),
-      path.join(__dirname, '../pkg/rust-contract.js')
+      path.join(__dirname, "../src"),
+      path.join(__dirname, "../pkg/rust-contract.js")
     );
 
-    console.log(contractTxId);
+    console.log(`Contract TX ID: ${contractTxId}`);
+    token = new TokenContractImpl(
+      contractTxId,
+      smartweave
+    ).setEvaluationOptions({
+      internalWrites: true,
+    }) as TokenContract;
 
-    foreignContractTxId = await smartweave.createContract.deploy(
-      {
-        wallet,
-        initState: JSON.stringify({
-          ...initialState,
-          ...{
-            ticker: 'FOREIGN_PST',
-            name: 'foreign contract',
-          },
-        }),
-        src: contractSrc,
-      },
-      path.join(__dirname, '../src'),
-      path.join(__dirname, '../pkg/rust-contract.js')
-    );
-
-    console.log(foreignContractTxId);
-
-    // connecting to the PST contract
-    pst = smartweave.pst(contractTxId).setEvaluationOptions({
-      internalWrites: true
-    }) as PstContract;
-
-    pst2 = smartweave.pst(foreignContractTxId).setEvaluationOptions({
-      internalWrites: true
-    }) as PstContract;
-
-    // connecting wallet to the PST contract
-    pst.connect(wallet);
-    pst2.connect(wallet);
+    token.connect(wallet);
 
     await mineBlock(arweave);
   });
@@ -126,142 +200,50 @@ describe('Testing the Profit Sharing Token', () => {
     await arlocal.stop();
   });
 
-  it('should properly deploy contract', async () => {
+  it("should properly deploy contract", async () => {
     const contractTx = await arweave.transactions.get(contractTxId);
 
     expect(contractTx).not.toBeNull();
-    expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual('wasm');
-    expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
+    expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual("wasm");
+    expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual("rust");
 
     const contractSrcTx = await arweave.transactions.get(
       getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID)
     );
     expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual(
-      'application/wasm'
+      "application/wasm"
     );
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
+    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual("rust");
   });
 
-  it('should read pst state and balance data', async () => {
-    expect(await pst.currentState()).toEqual(initialState);
-
-    expect(
-      (await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'))
-        .balance
-    ).toEqual(10000000);
-    expect(
-      (await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'))
-        .balance
-    ).toEqual(23111222);
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669);
+  it("should get token name", async () => {
+    expect(await token.currentState()).toEqual(initialState);
+    expect(await token.name()).toEqual("Test Token");
   });
 
-  it('should properly transfer tokens', async () => {
-    await pst.transfer({
-      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
-      qty: 555,
-    });
-    await mineBlock(arweave);
+  it("should get token symbol", async () => {
+    expect(await token.currentState()).toEqual(initialState);
 
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      555669 - 555
-    );
-    expect(
-      (await pst.currentState()).balances[
-        'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
-      ]
-    ).toEqual(10000000 + 555);
+    expect(await token.symbol()).toEqual("TST");
   });
 
-  it('should properly view contract state', async () => {
-    const result = await pst.currentBalance(
-      'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
-    );
-    expect(result.balance).toEqual(10000000 + 555);
-    expect(result.ticker).toEqual('EXAMPLE_PST_TOKEN');
-    expect(result.target).toEqual(
-      'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
-    );
+  it("should get token decimals", async () => {
+    expect(await token.currentState()).toEqual(initialState);
+
+    expect(await token.decimals()).toEqual(10);
   });
 
-  // note: the dummy logic on the test contract should add 1000 tokens
-  // to each address, if the foreign contract state 'ticker' field = 'FOREIGN_PST'
-  it('should properly read foreign contract state', async () => {
-    await pst.writeInteraction({
-      function: 'foreignRead',
-      contractTxId: foreignContractTxId,
-    });
-    await mineBlock(arweave);
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(
-      555669 - 555 + 1000
-    );
-    expect(
-      (await pst.currentState()).balances[
-        'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
-      ]
-    ).toEqual(10000000 + 555 + 1000);
+  it("should get token total supply", async () => {
+    expect(await token.currentState()).toEqual(initialState);
+
+    expect(await token.totalSupply()).toEqual(BigInt("10000000000000000000"));
   });
 
-  it('should properly perform internal write', async () => {
-    expect((await pst2.currentBalance("uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M")).balance).toEqual(10000000)
+  it("should get token balance for an address", async () => {
+    expect(await token.currentState()).toEqual(initialState);
 
-    await pst.writeInteraction({
-      function: 'foreignWrite',
-      contractTxId: foreignContractTxId,
-      target: "uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M",
-      qty: 555,
-    });
-    await mineBlock(arweave);
-
-
-    expect((await pst2.currentBalance("uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M")).balance).toEqual(10000555)
-    expect((await pst2.currentBalance(walletAddress)).balance).toEqual(555669 - 555);
-  });
-
-  it("should properly evolve contract's source code", async () => {
-    expect((await pst.currentState()).balances[walletAddress]).toEqual(556114);
-
-    const newSource = fs.readFileSync(
-      path.join(__dirname, './data/token-evolve.js'),
-      'utf8'
+    expect((await token.balanceOf(walletAddress)).balance).toEqual(
+      BigInt("10000000000000000000")
     );
-
-    const newSrcTxId = await pst.saveNewSource(newSource);
-    await mineBlock(arweave);
-
-    await pst.evolve(newSrcTxId);
-    await mineBlock(arweave);
-
-    // note: the evolved balance always adds 555 to the result
-    expect((await pst.currentBalance(walletAddress)).balance).toEqual(
-      556114 + 555
-    );
-  });
-
-  it('should properly perform dry write with overwritten caller', async () => {
-    const newWallet = await arweave.wallets.generate();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
-    await pst.transfer({
-      target: overwrittenCaller,
-      qty: 1000,
-    });
-
-    await mineBlock(arweave);
-
-    // note: transfer should be done from the "overwrittenCaller" address, not the "walletAddress"
-    const result: InteractionResult<PstState, unknown> = await pst.dryWrite(
-      {
-        function: 'transfer',
-        target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
-        qty: 333,
-      },
-      overwrittenCaller
-    );
-
-    expect(result.state.balances[walletAddress]).toEqual(555114 - 1000 + 1000);
-    expect(
-      result.state.balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']
-    ).toEqual(10000000 + 1000 + 555 + 333);
-    expect(result.state.balances[overwrittenCaller]).toEqual(1000 - 333);
   });
 });
