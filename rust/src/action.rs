@@ -1,5 +1,6 @@
+use std::convert::Infallible;
 use std::num::ParseIntError;
-use std::ops::Deref;
+use std::ops::{Add, Deref, Sub};
 use std::str::FromStr;
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -8,8 +9,27 @@ use crate::contract_utils::handler_result::HandlerResult;
 use crate::error::ContractError;
 use crate::state::State;
 
-#[derive(Clone, Debug, Default, Deserialize, Eq, Hash, PartialEq, PartialOrd, Serialize)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq, PartialOrd)]
 pub struct Address(String);
+
+impl Serialize for Address {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.0.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for Address {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: &str = de::Deserialize::deserialize(deserializer)?;
+        Address::from_str(s).map_err(de::Error::custom)
+    }
+}
 
 impl Deref for Address {
     type Target = str;
@@ -19,21 +39,11 @@ impl Deref for Address {
     }
 }
 
-impl TryFrom<&str> for Address {
-    type Error = ();
+impl FromStr for Address {
+    type Err = Infallible;
 
-    fn try_from(val: &str) -> Result<Self, ()> {
-        // TODO: Check that the address is a valid Arweave address
-        Ok(Address(val.to_string()))
-    }
-}
-
-impl TryFrom<String> for Address {
-    type Error = ();
-
-    fn try_from(val: String) -> Result<Self, ()> {
-        // TODO: Check that the address is a valid Arweave address
-        Ok(Address(val))
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Address(s.to_owned()))
     }
 }
 
@@ -82,6 +92,22 @@ impl Deref for Amount {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl Sub for Amount {
+    type Output = Amount;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Amount(self.0 - rhs.0)
+    }
+}
+
+impl Add for Amount {
+    type Output = Amount;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Amount(self.0 + rhs.0)
     }
 }
 

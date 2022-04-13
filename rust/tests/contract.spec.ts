@@ -49,12 +49,17 @@ class Balance {
 }
 
 interface TokenContract extends Contract<TokenState> {
+  allowance(owner: string, value: bigint): Promise<bigint>;
   balanceOf(target: string): Promise<Balance>;
   currentState(): Promise<TokenState>;
+  decimals(): Promise<number>;
   name(): Promise<string | null | unknown>;
   symbol(): Promise<string>;
-  decimals(): Promise<number>;
   totalSupply(): Promise<bigint>;
+
+  approve(spender: string, value: bigint): Promise<string | null>;
+  transfer(to: string, value: bigint): Promise<string | null>;
+  transferFrom(from: string, to: string, value: bigint): Promise<string | null>;
 }
 
 class TokenContractImpl
@@ -62,7 +67,7 @@ class TokenContractImpl
   implements TokenContract
 {
   async currentState() {
-    return (await super.readState()).state;
+    return (await super.readState()).state as TokenState;
   }
   async name() {
     const interactionResult = await this.viewState({
@@ -115,6 +120,22 @@ class TokenContractImpl
         balance: string;
       }
     );
+  }
+  async transfer(to: string, value: bigint) {
+    return this.writeInteraction({
+      function: "transfer",
+      to,
+      amount: value.toString(),
+    });
+  }
+  async transferFrom(_from: string, _to: string, _value: BigInt) {
+    return Promise.reject(new Error("Not implemented!"));
+  }
+  async approve(_spender: string, _value: BigInt) {
+    return Promise.reject(new Error("Not implemented!"));
+  }
+  async allowance(_owner: string, _value: BigInt) {
+    return Promise.reject(new Error("Not implemented!"));
   }
 }
 
@@ -245,5 +266,29 @@ describe("Test Token", () => {
     expect((await token.balanceOf(walletAddress)).balance).toEqual(
       BigInt("10000000000000000000")
     );
+  });
+
+  it("should properly transfer tokens", async () => {
+    // FIXME: why reading balance from balances returns string?
+    let balanceBefore = BigInt(
+      (await token.currentState()).balances[walletAddress]
+    );
+    let amount = BigInt("555");
+
+    let balanceAfter = balanceBefore - amount;
+
+    await token.transfer("uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M", amount);
+    await mineBlock(arweave);
+
+    expect(
+      BigInt((await token.currentState()).balances[walletAddress])
+    ).toEqual(balanceAfter);
+    expect(
+      BigInt(
+        (await token.currentState()).balances[
+          "uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M"
+        ]
+      )
+    ).toEqual(amount);
   });
 });
