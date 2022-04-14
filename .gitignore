@@ -1,3 +1,2 @@
-/target
-Cargo.lock
-/3em
+.DS_Store/
+target/
