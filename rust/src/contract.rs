@@ -1,16 +1,17 @@
 use std::str::FromStr;
 
 use crate::action::{Action, ActionResult, Address};
+use crate::actions::allowance::{allowance, approve};
 use crate::actions::queries::{balance, decimals, name, symbol, total_supply};
-use crate::actions::transfer::transfer;
+use crate::actions::transfer::{transfer, transfer_from};
 use crate::error::ContractError;
 use crate::state::State;
 
 pub async fn handle(current_state: State, action: Action) -> ActionResult {
     match action {
         Action::BalanceOf { target } => {
-            if let Ok(address) = Address::from_str(target.as_str()) {
-                balance(current_state, &address)
+            if let Ok(owner) = Address::from_str(target.as_str()) {
+                balance(current_state, &owner)
             } else {
                 Err(ContractError::InvalidAddress(target))
             }
@@ -24,18 +25,23 @@ pub async fn handle(current_state: State, action: Action) -> ActionResult {
             (Err(_), _) => Err(ContractError::InvalidAddress(to)),
             (_, Err(err)) => Err(ContractError::ParseError(err.to_string())),
         },
-        Action::TransferFrom {
-            from: _,
-            to: _,
-            amount: _,
-        } => todo!(),
-        Action::Approve {
-            spender: _,
-            amount: _,
-        } => todo!(),
-        Action::Allowance {
-            target: _,
-            spender: _,
-        } => todo!(),
+        Action::TransferFrom { from, to, amount } => {
+            match (from.parse(), to.parse(), amount.parse()) {
+                (Ok(from), Ok(to), Ok(amount)) => transfer_from(current_state, from, to, amount),
+                (Err(_), _, _) => Err(ContractError::InvalidAddress(from)),
+                (_, Err(_), _) => Err(ContractError::InvalidAddress(to)),
+                (_, _, Err(err)) => Err(ContractError::ParseError(err.to_string())),
+            }
+        }
+        Action::Approve { spender, amount } => match (spender.parse(), amount.parse()) {
+            (Ok(spender), Ok(amount)) => approve(current_state, spender, amount),
+            (Err(_), _) => Err(ContractError::InvalidAddress(spender)),
+            (_, Err(err)) => Err(ContractError::ParseError(err.to_string())),
+        },
+        Action::Allowance { owner, spender } => match (owner.parse(), spender.parse()) {
+            (Ok(target), Ok(spender)) => allowance(current_state, target, spender),
+            (_, Err(_)) => Err(ContractError::InvalidAddress(owner)),
+            (Err(_), _) => Err(ContractError::InvalidAddress(spender)),
+        },
     }
 }

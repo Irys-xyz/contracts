@@ -26,30 +26,59 @@ class TokenState {
   balances: {
     [key: string]: bigint;
   };
+  allowances: {
+    [key: string]: {
+      [key: string]: bigint;
+    };
+  };
 }
 
 class Balance {
-  ticker: string;
-  target: string;
   balance: bigint;
+  target: string;
+  ticker: string;
 
   constructor({
+    balance,
     ticker,
     target,
-    balance,
   }: {
+    balance: string;
     ticker: string;
     target: string;
-    balance: string;
   }) {
+    this.balance = BigInt(balance);
     this.ticker = ticker;
     this.target = target;
-    this.balance = BigInt(balance);
+  }
+}
+
+class Allowance {
+  allowance: bigint;
+  ticker: string;
+  owner: string;
+  spender: string;
+
+  constructor({
+    allowance,
+    ticker,
+    owner,
+    spender,
+  }: {
+    allowance: string;
+    ticker: string;
+    owner: string;
+    spender: string;
+  }) {
+    this.allowance = BigInt(allowance);
+    this.ticker = ticker;
+    this.owner = owner;
+    this.spender = spender;
   }
 }
 
 interface TokenContract extends Contract<TokenState> {
-  allowance(owner: string, value: bigint): Promise<bigint>;
+  allowance(owner: string, spender: string): Promise<Allowance>;
   balanceOf(target: string): Promise<Balance>;
   currentState(): Promise<TokenState>;
   decimals(): Promise<number>;
@@ -128,29 +157,52 @@ class TokenContractImpl
       amount: value.toString(),
     });
   }
-  async transferFrom(_from: string, _to: string, _value: BigInt) {
-    return Promise.reject(new Error("Not implemented!"));
+  async transferFrom(from: string, to: string, value: BigInt) {
+    return this.writeInteraction({
+      function: "transferFrom",
+      from,
+      to,
+      amount: value.toString(),
+    });
   }
-  async approve(_spender: string, _value: BigInt) {
-    return Promise.reject(new Error("Not implemented!"));
+  async approve(spender: string, value: BigInt) {
+    return this.writeInteraction({
+      function: "approve",
+      spender,
+      amount: value.toString(),
+    });
   }
-  async allowance(_owner: string, _value: BigInt) {
-    return Promise.reject(new Error("Not implemented!"));
+  async allowance(owner: string, spender: string) {
+    const interactionResult = await this.viewState({
+      function: "allowance",
+      owner,
+      spender,
+    });
+    if (interactionResult.type !== "ok") {
+      throw Error(interactionResult.errorMessage);
+    }
+    return new Allowance(
+      interactionResult.result as {
+        allowance: string;
+        ticker: string;
+        owner: string;
+        spender: string;
+      }
+    );
   }
 }
 
 describe("Test Token", () => {
   let contractSrc: Buffer;
 
-  let wallet: JWKInterface;
-  let walletAddress: string;
+  let wallets: { wallet: JWKInterface; address: string }[];
 
   let initialState: TokenState;
 
   let arweave: Arweave;
   let arlocal: ArLocal;
   let smartweave: SmartWeave;
-  let token: TokenContract;
+  let connections: TokenContract[];
 
   let contractTxId: string;
 
@@ -172,9 +224,18 @@ describe("Test Token", () => {
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
-    walletAddress = await arweave.wallets.jwkToAddress(wallet);
+    // Create wallets, fund them and get address
+    wallets = await Promise.all(
+      [0, 1].map(async (_) => {
+        let wallet = await arweave.wallets.generate();
+        await addFunds(arweave, wallet);
+        let address = await arweave.wallets.jwkToAddress(wallet);
+        return {
+          wallet,
+          address,
+        };
+      })
+    );
 
     contractSrc = fs.readFileSync(
       path.join(__dirname, "../pkg/rust-contract_bg.wasm")
@@ -186,9 +247,9 @@ describe("Test Token", () => {
     initialState = {
       ...stateFromFile,
       ...{
-        owner: walletAddress,
+        owner: wallets[0].address,
         balances: {
-          [walletAddress]: stateFromFile.totalSupply,
+          [wallets[0].address]: stateFromFile.totalSupply,
         },
       },
     };
@@ -196,7 +257,7 @@ describe("Test Token", () => {
     // deploying contract using the new SDK.
     contractTxId = await smartweave.createContract.deploy(
       {
-        wallet,
+        wallet: wallets[0].wallet,
         initState: JSON.stringify(initialState),
         src: contractSrc,
       },
@@ -205,14 +266,17 @@ describe("Test Token", () => {
     );
 
     console.log(`Contract TX ID: ${contractTxId}`);
-    token = new TokenContractImpl(
-      contractTxId,
-      smartweave
-    ).setEvaluationOptions({
-      internalWrites: true,
-    }) as TokenContract;
+    connections = [
+      new TokenContractImpl(contractTxId, smartweave).setEvaluationOptions({
+        internalWrites: true,
+      }) as TokenContract,
+      new TokenContractImpl(contractTxId, smartweave).setEvaluationOptions({
+        internalWrites: true,
+      }) as TokenContract,
+    ];
 
-    token.connect(wallet);
+    connections[0].connect(wallets[0].wallet);
+    connections[1].connect(wallets[1].wallet);
 
     await mineBlock(arweave);
   });
@@ -238,57 +302,112 @@ describe("Test Token", () => {
   });
 
   it("should get token name", async () => {
-    expect(await token.currentState()).toEqual(initialState);
-    expect(await token.name()).toEqual("Test Token");
+    expect(await connections[0].currentState()).toEqual(initialState);
+    expect(await connections[0].name()).toEqual("Test Token");
   });
 
   it("should get token symbol", async () => {
-    expect(await token.currentState()).toEqual(initialState);
+    expect(await connections[0].currentState()).toEqual(initialState);
 
-    expect(await token.symbol()).toEqual("TST");
+    expect(await connections[0].symbol()).toEqual("TST");
   });
 
   it("should get token decimals", async () => {
-    expect(await token.currentState()).toEqual(initialState);
+    expect(await connections[0].currentState()).toEqual(initialState);
 
-    expect(await token.decimals()).toEqual(10);
+    expect(await connections[0].decimals()).toEqual(10);
   });
 
   it("should get token total supply", async () => {
-    expect(await token.currentState()).toEqual(initialState);
+    expect(await connections[0].currentState()).toEqual(initialState);
 
-    expect(await token.totalSupply()).toEqual(BigInt("10000000000000000000"));
-  });
-
-  it("should get token balance for an address", async () => {
-    expect(await token.currentState()).toEqual(initialState);
-
-    expect((await token.balanceOf(walletAddress)).balance).toEqual(
+    expect(await connections[0].totalSupply()).toEqual(
       BigInt("10000000000000000000")
     );
   });
 
+  it("should get token balance for an address", async () => {
+    expect(await connections[0].currentState()).toEqual(initialState);
+
+    expect(
+      (await connections[0].balanceOf(wallets[0].address)).balance
+    ).toEqual(BigInt("10000000000000000000"));
+  });
+
   it("should properly transfer tokens", async () => {
-    // FIXME: why reading balance from balances returns string?
+    // FIXME: why reading balance from balances returns a string?
     let balanceBefore = BigInt(
-      (await token.currentState()).balances[walletAddress]
+      (await connections[0].currentState()).balances[wallets[0].address]
     );
     let amount = BigInt("555");
 
     let balanceAfter = balanceBefore - amount;
 
-    await token.transfer("uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M", amount);
+    await connections[0].transfer(
+      "uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M",
+      amount
+    );
     await mineBlock(arweave);
 
     expect(
-      BigInt((await token.currentState()).balances[walletAddress])
+      BigInt((await connections[0].currentState()).balances[wallets[0].address])
     ).toEqual(balanceAfter);
     expect(
       BigInt(
-        (await token.currentState()).balances[
+        (await connections[0].currentState()).balances[
           "uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M"
         ]
       )
     ).toEqual(amount);
+  });
+
+  it("should properly transfer tokens using allowance", async () => {
+    let to_address = "uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M";
+
+    // FIXME: why reading balance from balances returns a string?
+    let balancesBefore = [
+      (await connections[0].balanceOf(wallets[0].address)).balance,
+      (await connections[0].balanceOf(wallets[1].address)).balance,
+      (await connections[0].balanceOf(to_address)).balance,
+    ];
+    let allowance = BigInt("555");
+    let transferAmount = BigInt("111");
+
+    let expectedBalancesAfter = [
+      balancesBefore[0] - transferAmount,
+      balancesBefore[1],
+      balancesBefore[2] + transferAmount,
+    ];
+
+    let expectedAllowanceAfter = BigInt("555") - BigInt("111");
+
+    await connections[0].approve(wallets[1].address, allowance);
+    await mineBlock(arweave);
+
+    expect(
+      (await connections[0].allowance(wallets[0].address, wallets[1].address))
+        .allowance
+    ).toEqual(allowance);
+
+    // FIXME: how to execute this transaction using different wallet?
+    await connections[1].transferFrom(
+      wallets[0].address,
+      to_address,
+      transferAmount
+    );
+    await mineBlock(arweave);
+
+    expect(
+      (await connections[0].balanceOf(wallets[0].address)).balance
+    ).toEqual(expectedBalancesAfter[0]);
+
+    expect((await connections[0].balanceOf(to_address)).balance).toEqual(
+      expectedBalancesAfter[2]
+    );
+
+    expect(
+      (await connections[1].allowance(wallets[0].address, wallets[1].address))
+        .allowance
+    ).toEqual(expectedAllowanceAfter);
   });
 });

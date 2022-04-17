@@ -122,7 +122,7 @@ pub enum Action {
         target: String,
     },
     Allowance {
-        target: String,
+        owner: String,
         spender: String,
     },
     Transfer {
@@ -143,6 +143,12 @@ pub enum Action {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum QueryResponseMsg {
+    Allowance {
+        allowance: Amount,
+        ticker: String,
+        owner: Address,
+        spender: Address,
+    },
     Balance {
         balance: Amount,
         ticker: String,

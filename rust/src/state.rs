@@ -12,4 +12,5 @@ pub struct State {
     pub total_supply: Amount,
     pub owner: Address,
     pub balances: HashMap<Address, Amount>,
+    pub allowances: HashMap<Address, HashMap<Address, Amount>>,
 }
