@@ -1,9 +1,12 @@
-node_modules
-dist
+target/
+node_modules/
+dist/
 __tests__/*.json
-/coverage
 .DS_Store
 .secrets
 .idea
 .yalc
 yalc.lock
+
+# so that each developer won't overwrite their own local contract address
+contracts-registry.address.test.txt

@@ -11,12 +11,12 @@ jobs:
       - uses: jetli/wasm-pack-action@v0.3.0
         with:
           version: "latest"
-      - name: Rust - install
+      - name: Token - install
         run: yarn
-        working-directory: rust
-      - name: Rust - build
+        working-directory: token
+      - name: Token - build
         run: yarn build
-        working-directory: rust
-      - name: Rust - run tests
+        working-directory: token
+      - name: Token - run tests
         run: yarn test
-        working-directory: rust
+        working-directory: token
