@@ -9,17 +9,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4a45a46ab1f2412e53d3a0ade76ffad2025804294569aae387231a0cd6e0899"
 
 [[package]]
-name = "bundlr-contracts-bundler"
+name = "bundlr-contracts-bundlers"
 version = "0.1.0"
+dependencies = [
+ "bundlr-contracts-shared",
+ "js-sys",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
 
 [[package]]
 name = "bundlr-contracts-shared"
 version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "serde",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
 
 [[package]]
 name = "bundlr-contracts-token"
 version = "0.1.0"
 dependencies = [
+ "bundlr-contracts-shared",
  "js-sys",
  "serde",
  "serde_json",

@@ -1,28 +1,34 @@
-use crate::action::{ActionResult, Address, Amount};
+use bundlr_contracts_shared::{
+    contract_utils::js_imports::{log, SmartWeave, Transaction},
+    Address, Amount,
+};
+
+use crate::action::ActionResult;
 use crate::contract_utils::handler_result::HandlerResult;
-use crate::contract_utils::js_imports::{log, SmartWeave, Transaction};
 use crate::error::ContractError;
 use crate::state::State;
 
 use super::allowance::spend_allowance;
 
 pub fn transfer(mut state: State, to: Address, amount: Amount) -> ActionResult {
-    log(("caller ".to_owned() + &SmartWeave::caller()).as_str());
-    log(("Transaction owner ".to_owned() + &Transaction::owner()).as_str());
+    log(&format!("token transfer caller {}", SmartWeave::caller()));
+    log(&format!(
+        "token transfer Transaction owner {}",
+        Transaction::owner(),
+    ));
 
     if amount == Amount::ZERO {
         return Err(ContractError::AmountMustBeHigherThanZero);
     }
 
-    // TODO: why `Transaction::owner()` and not `SmartWeave::caller()`?
-    let caller = Transaction::owner()
+    let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
     let balances = &mut state.balances;
 
     // Checking if caller has enough funds
     let caller_balance = *balances.get(&caller).unwrap_or(&Amount::ZERO);
-    if caller_balance <= amount {
+    if caller_balance < amount {
         return Err(ContractError::CallerBalanceNotEnough(caller_balance));
     }
 
@@ -37,15 +43,20 @@ pub fn transfer(mut state: State, to: Address, amount: Amount) -> ActionResult {
 }
 
 pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -> ActionResult {
-    log(("caller ".to_owned() + &SmartWeave::caller()).as_str());
-    log(("Transaction owner ".to_owned() + &Transaction::owner()).as_str());
+    log(&format!(
+        "token transfer_from caller {}",
+        SmartWeave::caller()
+    ));
+    log(&format!(
+        "token transfer_from Transaction owner {}",
+        Transaction::owner(),
+    ));
 
     if amount == Amount::ZERO {
         return Err(ContractError::AmountMustBeHigherThanZero);
     }
 
-    // TODO: why `Transaction::owner()` and not `SmartWeave::caller()`?
-    let caller = Transaction::owner()
+    let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 
@@ -61,7 +72,7 @@ pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -
 
     // Checking if caller has enough funds
     let from_balance = *balances.get(&from).unwrap_or(&Amount::ZERO);
-    if from_balance <= amount {
+    if from_balance < amount {
         return Err(ContractError::CallerBalanceNotEnough(from_balance));
     }
 

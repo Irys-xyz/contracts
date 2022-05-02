@@ -20,3 +20,12 @@ jobs:
       - name: Token - run tests
         run: yarn test
         working-directory: token
+      - name: Bundlers - install
+        run: yarn
+        working-directory: bundlers
+      - name: Bundlers - build
+        run: yarn build
+        working-directory: bundlers
+      - name: Bundlers - run tests
+        run: yarn test
+        working-directory: bundlers

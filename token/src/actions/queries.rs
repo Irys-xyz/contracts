@@ -1,4 +1,6 @@
-use crate::action::{ActionResult, Address, Amount, QueryResponseMsg};
+use bundlr_contracts_shared::{Address, Amount};
+
+use crate::action::{ActionResult, QueryResponseMsg};
 use crate::contract_utils::handler_result::HandlerResult::QueryResponse;
 use crate::state::State;
 

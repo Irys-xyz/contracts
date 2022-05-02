@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
-use crate::action::{Action, ActionResult, Address};
+use bundlr_contracts_shared::Address;
+
+use crate::action::{Action, ActionResult};
 use crate::actions::allowance::{allowance, approve};
 use crate::actions::queries::{balance, decimals, name, symbol, total_supply};
 use crate::actions::transfer::{transfer, transfer_from};

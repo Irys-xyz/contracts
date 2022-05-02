@@ -1,8 +1,7 @@
-use serde::Serialize;
+use bundlr_contracts_shared::{Address, Amount};
+use serde::{Deserialize, Serialize};
 
-use crate::action::{Address, Amount};
-
-#[derive(Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum ContractError {
     RuntimeError(String),
     ParseError(String),

@@ -3,6 +3,8 @@ name = "bundlr-contracts-shared"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+js-sys = "0.3.56"
+serde = { version = "1", features = ["derive"] }
+wasm-bindgen = { version = "= 0.2.79", features = ["serde-serialize"] }
+wasm-bindgen-futures = { version = "0.4.29" }

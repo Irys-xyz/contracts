@@ -3,7 +3,6 @@
 members = [
     "shared",
     "token",
-    "bundler",
+    "bundlers",
     "validator",
 ]
-

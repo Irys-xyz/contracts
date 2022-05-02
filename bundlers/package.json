@@ -1,9 +1,9 @@
 {
-  "name": "bundlr-contracts-token",
+  "name": "bundlr-contracts-bundlers",
   "version": "0.0.1",
-  "description": "Bundlr SmartWeave contract for Bundlr Token",
+  "description": "Bundlr SmartWeave contract for Bundlers",
   "main": "index.js",
-  "author": "Miko Nieminen <miko.nieminen@iki.fi>",
+  "author": "Miko Nieminene <miko.nieminen@iki.fi>",
   "license": "MIT",
   "private": false,
   "scripts": {

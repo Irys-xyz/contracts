@@ -1,9 +1,8 @@
+use bundlr_contracts_shared::{Address, Amount};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::action::{Address, Amount};
-
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct State {
     pub ticker: String,
