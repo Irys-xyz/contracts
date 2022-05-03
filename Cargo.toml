@@ -4,5 +4,5 @@ members = [
     "shared",
     "token",
     "bundlers",
-    "validator",
+    "validators",
 ]
