@@ -226,15 +226,15 @@ describe("Bundlers Contract", () => {
     let stake = BigInt(await connections[1].bundlers.stake());
 
     // FIXME: why does this map return strings instead of bigints?
-    let withdrawAllowedAt = BigInt(
-      (await connections[1].bundlers.bundlers())[accounts[1].address]
-    );
+    let withdrawAllowedAt = (await connections[1].bundlers.bundlers())[
+      accounts[1].address
+    ];
 
     let networkInfo = connections[1].bundlers.getNetworkInfo();
 
     let blocksNeeded = Math.max(
       0,
-      Number(withdrawAllowedAt - BigInt(networkInfo.height))
+      Number(BigInt(withdrawAllowedAt) - BigInt(networkInfo.height))
     );
 
     // Mine enought blocks so that withdraw should become available

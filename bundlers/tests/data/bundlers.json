@@ -1,5 +1,6 @@
 {
   "bundlers": {},
-  "withdrawDelay": 3,
-  "token": null
+  "withdrawDelay": 21600,
+  "token": null,
+  "stake": "0"
 }

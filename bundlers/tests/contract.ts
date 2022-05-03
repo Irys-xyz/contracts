@@ -1,8 +1,7 @@
 import fs from "fs";
 
-import Arweave from "arweave";
-import { JWKInterface } from "arweave/node/lib/wallet";
 import {
+  ArWallet,
   Contract,
   HandlerBasedContract,
   SmartWeave,
@@ -10,13 +9,15 @@ import {
 import path from "path";
 
 export class State {
+  bundlers: { [key: string]: string | null };
   token: string;
-  bundlers: Set<string>;
+  stake: string;
+  withdrawDelay: number;
 }
 
 export interface BundlersContract extends Contract<State> {
   currentState(): Promise<State>;
-  bundlers(): Promise<{ [key: string]: bigint }>;
+  bundlers(): Promise<{ [key: string]: string }>;
   withdrawDelay(): Promise<number>;
   stake(): Promise<bigint>;
   token(): Promise<string>;
@@ -49,7 +50,7 @@ class BundlersContractImpl
     if (interactionResult.type !== "ok") {
       throw Error(interactionResult.errorMessage);
     }
-    return interactionResult.result as bigint;
+    return BigInt(interactionResult.result as string);
   }
   async bundlers() {
     const interactionResult = await this.viewState({
@@ -58,7 +59,7 @@ class BundlersContractImpl
     if (interactionResult.type !== "ok") {
       throw Error(interactionResult.errorMessage);
     }
-    return interactionResult.result as { [key: string]: bigint };
+    return interactionResult.result as { [key: string]: string };
   }
   async withdrawDelay() {
     const interactionResult = await this.viewState({
@@ -95,17 +96,18 @@ export async function deploy(
   smartweave: SmartWeave,
   token: string,
   stake: bigint,
-  owner: { wallet: JWKInterface }
+  owner: { wallet: ArWallet }
 ): Promise<[State, string]> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
-  const stateFromFile: State = JSON.parse(
+  const stateFromFile = JSON.parse(
     fs.readFileSync(path.join(__dirname, "./data/bundlers.json"), "utf8")
   );
 
   let initialState = {
     ...stateFromFile,
+    withdrawDelay: 3, // NOTE: For tests, we allow withdraw after 3 blocks
     token,
     stake: stake.toString(),
   };
@@ -125,7 +127,7 @@ export async function deploy(
 export async function connect(
   smartweave: SmartWeave,
   contractTxId: string,
-  wallet: JWKInterface
+  wallet: ArWallet
 ): Promise<BundlersContract> {
   let contract = new BundlersContractImpl(
     contractTxId,

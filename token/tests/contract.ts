@@ -1,7 +1,5 @@
 import fs from "fs";
 
-import Arweave from "arweave";
-import { JWKInterface } from "arweave/node/lib/wallet";
 import {
   ArWallet,
   Contract,
@@ -9,20 +7,19 @@ import {
   SmartWeave,
 } from "redstone-smartweave";
 import path from "path";
-import Transaction from "arweave/node/lib/transaction";
 
 export class TokenState {
   ticker: string;
   name: string | null | unknown;
   decimals: number;
-  totalSupply: bigint;
+  totalSupply: string;
   owner: string;
   balances: {
-    [key: string]: bigint;
+    [key: string]: string;
   };
   allowances: {
     [key: string]: {
-      [key: string]: bigint;
+      [key: string]: string;
     };
   };
 }
@@ -90,7 +87,7 @@ class TokenContractImpl
   implements TokenContract
 {
   async currentState() {
-    return (await super.readState()).state as TokenState;
+    return (await super.readState()).state;
   }
   async name() {
     const interactionResult = await this.viewState({
@@ -128,7 +125,7 @@ class TokenContractImpl
     }
     return BigInt(interactionResult.result as string);
   }
-  async balanceOf(target) {
+  async balanceOf(target: string): Promise<Balance> {
     const interactionResult = await this.viewState({
       function: "balanceOf",
       target,
@@ -193,7 +190,7 @@ export function deploy(
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
-  const stateFromFile: TokenState = JSON.parse(
+  const stateFromFile = JSON.parse(
     fs.readFileSync(path.join(__dirname, "./data/token.json"), "utf8")
   );
 
@@ -202,7 +199,7 @@ export function deploy(
     ...{
       owner: owner.address,
       balances: {
-        [owner.address]: stateFromFile.totalSupply,
+        [owner.address]: stateFromFile.totalSupply.toString(),
       },
     },
   };

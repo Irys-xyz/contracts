@@ -86,43 +86,36 @@ describe("Test Token", () => {
       "application/wasm"
     );
     expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual("rust");
+
+    expect(await connections[0].currentState()).toEqual(initialState);
   });
 
   it("should get token name", async () => {
-    expect(await connections[0].currentState()).toEqual(initialState);
     expect(await connections[0].name()).toEqual("Test Token");
   });
 
   it("should get token symbol", async () => {
-    expect(await connections[0].currentState()).toEqual(initialState);
-
     expect(await connections[0].symbol()).toEqual("TST");
   });
 
   it("should get token decimals", async () => {
-    expect(await connections[0].currentState()).toEqual(initialState);
-
     expect(await connections[0].decimals()).toEqual(10);
   });
 
   it("should get token total supply", async () => {
-    expect(await connections[0].currentState()).toEqual(initialState);
-
     expect(await connections[0].totalSupply()).toEqual(
       BigInt("10000000000000000000")
     );
   });
 
   it("should get token balance for an address", async () => {
-    expect(await connections[0].currentState()).toEqual(initialState);
-
     expect(
       (await connections[0].balanceOf(wallets[0].address)).balance
     ).toEqual(BigInt("10000000000000000000"));
   });
 
   it("should properly transfer tokens", async () => {
-    // FIXME: why reading balance from balances returns a string?
+    // NOTE: in the state, balance is stored as string
     let balanceBefore = BigInt(
       (await connections[0].currentState()).balances[wallets[0].address]
     );
@@ -151,7 +144,6 @@ describe("Test Token", () => {
   it("should properly transfer tokens using allowance", async () => {
     let to_address = "uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M";
 
-    // FIXME: why reading balance from balances returns a string?
     let balancesBefore = [
       (await connections[0].balanceOf(wallets[0].address)).balance,
       (await connections[0].balanceOf(wallets[1].address)).balance,
@@ -209,7 +201,6 @@ describe("Test Token", () => {
         .allowance
     ).toEqual(BigInt(0));
 
-    // FIXME: why reading balance from balances returns a string?
     let balancesBefore = [
       (await connections[0].balanceOf(wallets[0].address)).balance,
       (await connections[0].balanceOf(wallets[1].address)).balance,
