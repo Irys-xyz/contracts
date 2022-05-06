@@ -11,8 +11,11 @@ use crate::error::ContractError;
 use crate::state::State;
 
 pub fn approve(mut state: State, spender: Address, amount: Amount) -> ActionResult {
-    log(("caller ".to_owned() + &SmartWeave::caller()).as_str());
-    log(("Transaction owner ".to_owned() + &Transaction::owner()).as_str());
+    log(&format!("token approve caller {}", SmartWeave::caller()));
+    log(&format!(
+        "token approve Transaction owner {}",
+        Transaction::owner()
+    ));
 
     let caller = SmartWeave::caller()
         .parse::<Address>()
@@ -81,8 +84,14 @@ pub(super) fn spend_allowance(
     spender: &Address,
     amount: &Amount,
 ) -> Result<State, ContractError> {
-    log(("caller ".to_owned() + &SmartWeave::caller()).as_str());
-    log(("Transaction owner ".to_owned() + &Transaction::owner()).as_str());
+    log(&format!(
+        "token spend allowance caller {}",
+        SmartWeave::caller()
+    ));
+    log(&format!(
+        "token spend allowance Transaction owner {}",
+        Transaction::owner()
+    ));
 
     if amount == &Amount::ZERO {
         return Err(ContractError::AmountMustBeHigherThanZero);
