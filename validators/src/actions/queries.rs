@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::action::{ActionResult, QueryResponseMsg};
 use crate::contract_utils::handler_result::HandlerResult::QueryResponse;
 use crate::state::State;
@@ -12,14 +10,7 @@ pub fn validators(state: State) -> ActionResult {
 
 pub fn nominated_validators(state: State) -> ActionResult {
     Ok(QueryResponse(QueryResponseMsg::Validators(
-        state
-            .validators
-            .iter()
-            .filter(|validator| *validator.1)
-            .fold(HashMap::new(), |mut acc, (key, value)| {
-                acc.insert(key.to_owned(), value.to_owned());
-                acc
-            }),
+        state.nominated_validators,
     )))
 }
 

@@ -20,8 +20,8 @@ export class State {
 
 export interface ValidatorsContract extends Contract<State> {
   currentState(): Promise<State>;
-  validators(): Promise<{ [key: string]: boolean }>;
-  nominatedValidators(): Promise<{ [key: string]: boolean }>;
+  validators(): Promise<string[]>;
+  nominatedValidators(): Promise<string[]>;
   bundler(): Promise<string>;
   bundlersContract(): Promise<string>;
   stake(): Promise<bigint>;
@@ -109,7 +109,7 @@ class ValidatorsContractImpl
     if (interactionResult.type !== "ok") {
       throw Error(interactionResult.errorMessage);
     }
-    return interactionResult.result as { [key: string]: boolean };
+    return interactionResult.result as string[];
   }
   async nominatedValidators() {
     const interactionResult = await this.viewState({
@@ -118,7 +118,7 @@ class ValidatorsContractImpl
     if (interactionResult.type !== "ok") {
       throw Error(interactionResult.errorMessage);
     }
-    return interactionResult.result as { [key: string]: boolean };
+    return interactionResult.result as string[];
   }
   async updateEpoch() {
     return this.writeInteraction({

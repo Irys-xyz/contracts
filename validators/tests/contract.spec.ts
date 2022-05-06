@@ -153,8 +153,8 @@ describe("Bundlers Contract", () => {
     await connections[2].validators.join();
     await mineBlock(arweave);
 
-    expect(await connections[2].validators.validators()).not.toEqual(
-      expect.objectContaining({ [accounts[2].address]: false })
+    expect(await connections[2].validators.validators()).not.toContain(
+      accounts[2].address
     );
   });
 
@@ -168,8 +168,8 @@ describe("Bundlers Contract", () => {
     await connections[2].validators.join();
     await mineBlock(arweave);
 
-    expect(await connections[2].validators.validators()).toEqual(
-      expect.objectContaining({ [accounts[2].address]: false })
+    expect(await connections[2].validators.validators()).toContain(
+      accounts[2].address
     );
 
     // TODO: check token balances
@@ -199,8 +199,8 @@ describe("Bundlers Contract", () => {
     await connections[1].validators.updateEpoch();
     await mineBlock(arweave);
 
-    expect(await connections[1].validators.nominatedValidators()).toEqual(
-      expect.objectContaining({ [accounts[2].address]: true })
+    expect(await connections[1].validators.nominatedValidators()).toContain(
+      accounts[2].address
     );
   });
 
@@ -255,6 +255,16 @@ describe("Bundlers Contract", () => {
     await connections[1].validators.updateEpoch();
     await mineBlock(arweave);
 
-    console.log(await connections[1].validators.nominatedValidators());
+    let nominated1 = await connections[1].validators.nominatedValidators();
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+    await mineBlock(arweave);
+
+    await connections[1].validators.updateEpoch();
+    await mineBlock(arweave);
+
+    let nominated2 = await connections[1].validators.nominatedValidators();
+
+    expect(nominated1.sort()).not.toEqual(nominated2.sort());
   });
 });

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{contract_utils::handler_result::HandlerResult, epoch::Epoch};
 use bundlr_contracts_shared::{Address, Amount};
 use serde::{Deserialize, Serialize};
@@ -34,7 +32,7 @@ pub enum QueryResponseMsg {
     EpochDuration(u16),
     Token(Address),
     Stake(Amount),
-    Validators(HashMap<Address, bool>),
+    Validators(Vec<Address>),
 }
 
 pub type ActionResult = Result<HandlerResult<State, QueryResponseMsg>, ContractError>;

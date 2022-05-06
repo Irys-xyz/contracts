@@ -28,15 +28,19 @@ pub async fn leave(mut state: State) -> ActionResult {
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 
-    match state.validators.remove(&caller) {
-        Some(true) => {
-            return Err(ContractError::NominatedValidatorCannotLeave(caller));
-        }
-        Some(false) => (), // leaving is OK, just continue
-        None => {
-            return Err(ContractError::InvalidValidator(caller));
-        }
-    };
+    if state.nominated_validators.contains(&caller) {
+        return Err(ContractError::NominatedValidatorCannotLeave(caller));
+    }
+
+    if let Some(index) = state
+        .validators
+        .iter()
+        .position(|address| address == &caller)
+    {
+        state.validators.remove(index);
+    } else {
+        return Err(ContractError::InvalidValidator(caller));
+    }
 
     let result = SmartWeave::write(
         &state.token.to_string(),

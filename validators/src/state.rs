@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 
 use bundlr_contracts_shared::{Address, Amount};
@@ -15,5 +13,6 @@ pub struct State {
     pub epoch_duration: u16,
     pub stake: Amount,
     pub token: Address,
-    pub validators: HashMap<Address, bool>,
+    pub validators: Vec<Address>,
+    pub nominated_validators: Vec<Address>,
 }

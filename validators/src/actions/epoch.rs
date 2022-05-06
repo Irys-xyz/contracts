@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use rand_xoshiro::rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -13,9 +11,9 @@ use crate::{
     state::State,
 };
 
-struct TransactionBasedSeed(pub [u8; 32]);
+struct TransactionBasedRngSeed(pub [u8; 32]);
 
-impl TryFrom<&str> for TransactionBasedSeed {
+impl TryFrom<&str> for TransactionBasedRngSeed {
     type Error = ();
     fn try_from(tx_hash: &str) -> Result<Self, Self::Error> {
         let bytes = data_encoding::BASE64URL_NOPAD
@@ -39,20 +37,21 @@ impl TryFrom<&str> for TransactionBasedSeed {
     }
 }
 
-// TODO: refactor this to side-effect free and update status of each nominee separately
-fn pick_random<Rng, const COUNT: usize>(rng: &mut Rng, validators: &mut HashMap<Address, bool>)
+fn pick_random<Rng, const COUNT: usize>(rng: &mut Rng, validators: &[Address]) -> Vec<Address>
 where
     Rng: RngCore,
 {
-    log(&format!("pick {} validators", COUNT));
-    let addresses = validators.keys().cloned().collect::<Vec<Address>>();
-    let mut range = (0..addresses.len()).collect::<Vec<usize>>();
+    let mut addresses = Vec::with_capacity(10);
+    let mut range = (0..validators.len()).collect::<Vec<usize>>();
     for i in 0..COUNT {
-        let random_index: usize = (rng.next_u64() as usize % (addresses.len() - i)) + i;
-        log(&format!("swap {} and {}", i, random_index));
+        // get random index, but when selecting the index, skip first i indices as those
+        // are already randomized.
+        let random_val = rng.next_u32();
+        let random_index: usize = (random_val as usize % (validators.len() - i)) + i;
         range.swap(i, random_index);
-        *validators.get_mut(&addresses[i]).unwrap() = true;
+        addresses.push(validators[range[i]].clone());
     }
+    addresses
 }
 
 pub async fn update_epoch(mut state: State) -> ActionResult {
@@ -61,7 +60,7 @@ pub async fn update_epoch(mut state: State) -> ActionResult {
         "validators join transaction owner {}",
         Transaction::owner(),
     ));
-    log(&format!("{} validators", state.validators.keys().len()));
+    log(&format!("{} validators", state.validators.len()));
 
     // TODO: should this be SmartWeave::caller instead?
     let caller = Transaction::owner()
@@ -79,7 +78,7 @@ pub async fn update_epoch(mut state: State) -> ActionResult {
 
     state.epoch = state.epoch.next(Transaction::id(), Block::height() as u128);
 
-    let seed = TransactionBasedSeed::try_from(Transaction::id().as_str()).map_err(|()| {
+    let seed = TransactionBasedRngSeed::try_from(Transaction::id().as_str()).map_err(|()| {
         ContractError::RuntimeError("could not extract 32 bytes from Transaction::id()".to_string())
     })?;
 
@@ -87,18 +86,9 @@ pub async fn update_epoch(mut state: State) -> ActionResult {
 
     // Pick 10 random nominees or pick all if number of validatros is 10 or less
     if state.validators.len() < 11 {
-        state.validators.iter_mut().for_each(|(_, status)| {
-            *status = true;
-        });
+        state.nominated_validators = state.validators.iter().cloned().collect::<Vec<Address>>();
     } else {
-        // Reset all current nominees as unnominated
-        state
-            .validators
-            .iter_mut()
-            .filter(|(_, status)| **status)
-            .for_each(|(_, status)| *status = false);
-
-        pick_random::<_, 10>(&mut rng, &mut state.validators);
+        state.nominated_validators = pick_random::<_, 10>(&mut rng, &state.validators);
     };
 
     Ok(HandlerResult::NewState(state))

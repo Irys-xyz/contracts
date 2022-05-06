@@ -52,7 +52,7 @@ pub async fn join(mut state: State) -> ActionResult {
         return Err(ContractError::TransferFailed);
     }
 
-    state.validators.insert(caller, false);
+    state.validators.push(caller);
 
     Ok(HandlerResult::NewState(state))
 }
