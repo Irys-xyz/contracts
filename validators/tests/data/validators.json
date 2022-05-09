@@ -5,6 +5,7 @@
   "epochDuration": 500,
   "stake": "0",
   "token": null,
+  "maxNumNominatedValidators": 10,
   "validators": [],
   "nominatedValidators": []
 }

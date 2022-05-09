@@ -37,13 +37,13 @@ impl TryFrom<&str> for TransactionBasedRngSeed {
     }
 }
 
-fn pick_random<Rng, const COUNT: usize>(rng: &mut Rng, validators: &[Address]) -> Vec<Address>
+fn pick_random_nominees<Rng>(rng: &mut Rng, validators: &[Address], count: u8) -> Vec<Address>
 where
     Rng: RngCore,
 {
-    let mut addresses = Vec::with_capacity(10);
+    let mut addresses = Vec::with_capacity(count as usize);
     let mut range = (0..validators.len()).collect::<Vec<usize>>();
-    for i in 0..COUNT {
+    for i in 0..count as usize {
         // get random index, but when selecting the index, skip first i indices as those
         // are already randomized.
         let random_val = rng.next_u32();
@@ -85,10 +85,14 @@ pub async fn update_epoch(mut state: State) -> ActionResult {
     let mut rng = Xoshiro256PlusPlus::from_seed(seed.0);
 
     // Pick 10 random nominees or pick all if number of validatros is 10 or less
-    if state.validators.len() < 11 {
+    if state.validators.len() <= state.max_num_nominated_validators as usize {
         state.nominated_validators = state.validators.iter().cloned().collect::<Vec<Address>>();
     } else {
-        state.nominated_validators = pick_random::<_, 10>(&mut rng, &state.validators);
+        state.nominated_validators = pick_random_nominees(
+            &mut rng,
+            &state.validators,
+            state.max_num_nominated_validators,
+        );
     };
 
     Ok(HandlerResult::NewState(state))
