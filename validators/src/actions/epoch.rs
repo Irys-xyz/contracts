@@ -1,3 +1,4 @@
+use bundlr_contracts_shared::contract_utils::js_imports::{Contract, SmartWeave};
 use rand_xoshiro::rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -55,11 +56,23 @@ where
 }
 
 pub async fn update_epoch(mut state: State) -> ActionResult {
-    if (Block::height() as u128) < state.epoch.height + (state.epoch_duration as u128) {
+    if (Block::height() as u128) <= state.epoch.height {
         return Err(ContractError::UpdateEpochBlocked);
     }
 
-    state.epoch = state.epoch.next(Transaction::id(), Block::height() as u128);
+    // NOTE: this is a bit hacky, but way to initialize this to block data
+    // from the block where the contract deployment happened and similarly
+    // there is currently no way to access the information for the block
+    // height for the tx where the contract got deployed. Epoch sequence
+    // number zero inidicates that we aren't yet in an epoch.
+    // TODO: should we have some kind of grace period before the epoch becomes active?
+    let next_epoch_height = if state.epoch.seq == 0 {
+        Block::height() as u128
+    } else {
+        state.epoch.height + state.epoch_duration as u128
+    };
+
+    state.epoch = state.epoch.next(Transaction::id(), next_epoch_height);
 
     let seed = TransactionBasedRngSeed::try_from(Transaction::id().as_str()).map_err(|()| {
         ContractError::RuntimeError("could not extract 32 bytes from Transaction::id()".to_string())
