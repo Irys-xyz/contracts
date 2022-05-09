@@ -19,6 +19,17 @@ pub enum Action {
         owner: String,
         spender: String,
     },
+    Approve {
+        spender: String,
+        amount: String,
+    },
+    Burn {
+        amount: String,
+    },
+    BurnFrom {
+        from: String,
+        amount: String,
+    },
     Transfer {
         to: String,
         amount: String,
@@ -26,10 +37,6 @@ pub enum Action {
     TransferFrom {
         from: String,
         to: String,
-        amount: String,
-    },
-    Approve {
-        spender: String,
         amount: String,
     },
 }

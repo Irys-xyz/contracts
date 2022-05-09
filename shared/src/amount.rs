@@ -1,6 +1,6 @@
 use std::{
     num::ParseIntError,
-    ops::{Add, Deref, Sub},
+    ops::{Add, AddAssign, Deref, Sub, SubAssign},
     str::FromStr,
 };
 
@@ -67,5 +67,17 @@ impl Add for Amount {
 
     fn add(self, rhs: Self) -> Self::Output {
         Amount(self.0 + rhs.0)
+    }
+}
+
+impl SubAssign for Amount {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= rhs.0
+    }
+}
+
+impl AddAssign for Amount {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0
     }
 }

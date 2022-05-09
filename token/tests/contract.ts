@@ -78,6 +78,8 @@ export interface TokenContract extends Contract<TokenState> {
   totalSupply(): Promise<bigint>;
 
   approve(spender: string, value: bigint): Promise<string | null>;
+  burn(amount: bigint): Promise<string | null>;
+  burnFrom(from: string, amount: bigint): Promise<string | null>;
   transfer(to: string, value: bigint): Promise<string | null>;
   transferFrom(from: string, to: string, value: bigint): Promise<string | null>;
 }
@@ -140,6 +142,19 @@ class TokenContractImpl
         balance: string;
       }
     );
+  }
+  async burn(amount: bigint) {
+    return await this.writeInteraction({
+      function: "burn",
+      amount: amount.toString(),
+    });
+  }
+  async burnFrom(from: string, amount: BigInt) {
+    return await this.writeInteraction({
+      function: "burnFrom",
+      from,
+      amount: amount.toString(),
+    });
   }
   async transfer(to: string, value: bigint) {
     return await this.writeInteraction({

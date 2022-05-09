@@ -7,7 +7,7 @@ use crate::state::State;
 
 use super::allowance::spend_allowance;
 
-pub fn transfer(mut state: State, to: Address, amount: Amount) -> ActionResult {
+pub fn burn(mut state: State, amount: Amount) -> ActionResult {
     if amount == Amount::ZERO {
         return Err(ContractError::AmountMustBeHigherThanZero);
     }
@@ -25,13 +25,12 @@ pub fn transfer(mut state: State, to: Address, amount: Amount) -> ActionResult {
 
     balances.insert(caller, caller_balance - amount);
 
-    let target_balance = *balances.get(&to).unwrap_or(&Amount::ZERO);
-    balances.insert(to, target_balance + amount);
+    state.total_supply -= amount;
 
     Ok(HandlerResult::NewState(state))
 }
 
-pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -> ActionResult {
+pub fn burn_from(state: State, from: Address, amount: Amount) -> ActionResult {
     if amount == Amount::ZERO {
         return Err(ContractError::AmountMustBeHigherThanZero);
     }
@@ -40,7 +39,7 @@ pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 
-    // If caller is using this function for transferring tokens,
+    // If caller is using this function for burning tokens,
     // no need to check or change allowances.
     let mut state = if caller != from {
         spend_allowance(state, &from, &caller, &amount)?
@@ -58,8 +57,7 @@ pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -
 
     balances.insert(from, from_balance - amount);
 
-    let to_balance = *balances.get(&to).unwrap_or(&Amount::ZERO);
-    balances.insert(to, to_balance + amount);
+    state.total_supply -= amount;
 
     Ok(HandlerResult::NewState(state))
 }

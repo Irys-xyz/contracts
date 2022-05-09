@@ -4,6 +4,7 @@ use bundlr_contracts_shared::Address;
 
 use crate::action::{Action, ActionResult};
 use crate::actions::allowance::{allowance, approve};
+use crate::actions::burn::{burn, burn_from};
 use crate::actions::queries::{balance, decimals, name, symbol, total_supply};
 use crate::actions::transfer::{transfer, transfer_from};
 use crate::error::ContractError;
@@ -22,6 +23,15 @@ pub async fn handle(current_state: State, action: Action) -> ActionResult {
         Action::Symbol => symbol(current_state),
         Action::Decimals => decimals(current_state),
         Action::TotalSupply => total_supply(current_state),
+        Action::Burn { amount } => match amount.parse() {
+            Ok(amount) => burn(current_state, amount),
+            Err(err) => Err(ContractError::ParseError(err.to_string())),
+        },
+        Action::BurnFrom { from, amount } => match (from.parse(), amount.parse()) {
+            (Ok(from), Ok(amount)) => burn_from(current_state, from, amount),
+            (Err(_), _) => Err(ContractError::InvalidAddress(from)),
+            (_, Err(err)) => Err(ContractError::ParseError(err.to_string())),
+        },
         Action::Transfer { to, amount } => match (to.parse(), amount.parse()) {
             (Ok(to), Ok(amount)) => transfer(current_state, to, amount),
             (Err(_), _) => Err(ContractError::InvalidAddress(to)),

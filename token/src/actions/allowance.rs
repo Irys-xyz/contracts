@@ -15,7 +15,7 @@ pub fn approve(mut state: State, spender: Address, amount: Amount) -> ActionResu
     // Checking if caller has enough funds
     let caller_balance = *state.balances.get(&caller).unwrap_or(&Amount::ZERO);
     if caller_balance <= amount {
-        return Err(ContractError::CallerBalanceNotEnough(caller_balance));
+        return Err(ContractError::InvalidBalance(caller_balance));
     }
 
     match amount {

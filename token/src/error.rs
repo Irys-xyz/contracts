@@ -7,7 +7,7 @@ pub enum ContractError {
     ParseError(String),
     InvalidAddress(String),
     AmountMustBeHigherThanZero,
-    CallerBalanceNotEnough(Amount),
+    InvalidBalance(Amount),
     InvalidSpenderAllowance {
         owner: Address,
         spender: Address,

@@ -222,4 +222,95 @@ describe("Test Token", () => {
       balancesBefore[2]
     );
   });
+
+  it("should properly burn tokens", async () => {
+    // NOTE: in the state, balance is stored as string
+    let balanceBefore = BigInt(
+      (await connections[0].currentState()).balances[wallets[0].address]
+    );
+    let totalSupplyBefore = await connections[0].totalSupply();
+
+    let burnAmount = BigInt("555");
+
+    let expectedBalanceAfter = balanceBefore - burnAmount;
+    let expectedTotalSupplyAfter = totalSupplyBefore - burnAmount;
+
+    await connections[0].burn(burnAmount);
+    await mineBlock(arweave);
+
+    expect(await connections[0].totalSupply()).toEqual(
+      expectedTotalSupplyAfter
+    );
+    expect(
+      (await connections[0].balanceOf(wallets[0].address)).balance
+    ).toEqual(expectedBalanceAfter);
+  });
+
+  it("should properly burn tokens using allowance", async () => {
+    let burnAmount = BigInt(10);
+
+    let balancesBefore = [
+      (await connections[0].balanceOf(wallets[0].address)).balance,
+      (await connections[0].balanceOf(wallets[1].address)).balance,
+    ];
+
+    let totalSupplyBefore = await connections[0].totalSupply();
+
+    let expectedBalancesAfter = [
+      balancesBefore[0] - burnAmount,
+      balancesBefore[1],
+    ];
+
+    let expectedAllowanceAfter = BigInt("0");
+    let expectedTotalSupplyAfter = totalSupplyBefore - burnAmount;
+
+    await connections[0].approve(wallets[1].address, burnAmount);
+    await mineBlock(arweave);
+
+    expect(
+      (await connections[0].allowance(wallets[0].address, wallets[1].address))
+        .allowance
+    ).toEqual(burnAmount);
+
+    await connections[1].burnFrom(wallets[0].address, burnAmount);
+    await mineBlock(arweave);
+
+    expect(await connections[0].totalSupply()).toEqual(
+      expectedTotalSupplyAfter
+    );
+
+    expect(
+      (await connections[0].balanceOf(wallets[0].address)).balance
+    ).toEqual(expectedBalancesAfter[0]);
+
+    expect(
+      (await connections[1].allowance(wallets[0].address, wallets[1].address))
+        .allowance
+    ).toEqual(expectedAllowanceAfter);
+  });
+
+  it("burnFrom should fail when allowance is not set", async () => {
+    let burnAmount = BigInt(10);
+
+    // Make sure earlier tests are not affecting here and set the allowance to zero
+    await connections[0].approve(wallets[1].address, BigInt(0));
+    await mineBlock(arweave);
+
+    expect(
+      (await connections[1].allowance(wallets[0].address, wallets[1].address))
+        .allowance
+    ).toEqual(BigInt(0));
+
+    let balancesBefore = [
+      (await connections[0].balanceOf(wallets[0].address)).balance,
+      (await connections[0].balanceOf(wallets[1].address)).balance,
+    ];
+
+    await connections[1].burnFrom(wallets[0].address, burnAmount);
+    await mineBlock(arweave);
+
+    expect(
+      (await connections[0].balanceOf(wallets[0].address)).balance
+    ).toEqual(balancesBefore[0]);
+  });
 });
