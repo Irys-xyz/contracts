@@ -66,8 +66,7 @@ pub async fn withdraw(mut state: State) -> ActionResult {
 
     let result: Result = result.into_serde().unwrap();
 
-    // TODO: is this reliable enough as a check?
-    if result.result_type == "error" {
+    if result.result_type != "ok" {
         return Err(ContractError::TransferFailed);
     }
 
