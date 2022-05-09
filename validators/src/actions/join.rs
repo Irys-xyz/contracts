@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use bundlr_contracts_shared::{
-    contract_utils::js_imports::{Contract, SmartWeave, Transaction},
+    contract_utils::js_imports::{Contract, SmartWeave},
     Address, Amount,
 };
 use serde::{Deserialize, Serialize};
@@ -27,8 +27,7 @@ struct Result {
 }
 
 pub async fn join(mut state: State) -> ActionResult {
-    // TODO: should this be SmartWeave::caller instead?
-    let caller = Transaction::owner()
+    let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 

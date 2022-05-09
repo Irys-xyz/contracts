@@ -1,5 +1,5 @@
 use bundlr_contracts_shared::{
-    contract_utils::js_imports::{Block, Transaction},
+    contract_utils::js_imports::{Block, SmartWeave},
     Address, BlockHeight,
 };
 
@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub async fn leave(mut state: State) -> ActionResult {
-    let caller = Transaction::owner()
+    let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 

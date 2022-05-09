@@ -1,7 +1,4 @@
-use bundlr_contracts_shared::{
-    contract_utils::js_imports::{SmartWeave, Transaction},
-    Address, Amount,
-};
+use bundlr_contracts_shared::{contract_utils::js_imports::SmartWeave, Address, Amount};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsValue;
 
@@ -24,7 +21,7 @@ struct Result {
 }
 
 pub async fn leave(mut state: State) -> ActionResult {
-    let caller = Transaction::owner()
+    let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 

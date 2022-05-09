@@ -55,8 +55,7 @@ where
 }
 
 pub async fn update_epoch(mut state: State) -> ActionResult {
-    // TODO: should this be SmartWeave::caller instead?
-    let caller = Transaction::owner()
+    let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 

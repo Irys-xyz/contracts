@@ -1,5 +1,5 @@
 use bundlr_contracts_shared::{
-    contract_utils::js_imports::{log, Block, Contract, SmartWeave, Transaction},
+    contract_utils::js_imports::{log, Block, SmartWeave},
     Address, Amount,
 };
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ struct Result {
 }
 
 pub async fn withdraw(mut state: State) -> ActionResult {
-    let caller = Transaction::owner()
+    let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 
