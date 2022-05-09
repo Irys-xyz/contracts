@@ -2,7 +2,7 @@ use rand_xoshiro::rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 use bundlr_contracts_shared::{
-    contract_utils::js_imports::{Block, SmartWeave, Transaction},
+    contract_utils::js_imports::{Block, Transaction},
     Address,
 };
 
@@ -55,15 +55,6 @@ where
 }
 
 pub async fn update_epoch(mut state: State) -> ActionResult {
-    let caller = SmartWeave::caller()
-        .parse::<Address>()
-        .map_err(|err| ContractError::ParseError(err.to_string()))?;
-
-    // Only the bundler can update the epoch
-    if caller != state.bundler {
-        return Err(ContractError::InvalidCaller);
-    }
-
     if (Block::height() as u128) < state.epoch.height + (state.epoch_duration as u128) {
         return Err(ContractError::UpdateEpochBlocked);
     }
