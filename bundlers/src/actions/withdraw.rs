@@ -24,12 +24,6 @@ struct Result {
 }
 
 pub async fn withdraw(mut state: State) -> ActionResult {
-    log(&format!("withdraw caller: {}", SmartWeave::caller()));
-    log(&format!("withdraw contract ID: {}", Contract::id()));
-    log(&format!("withdraw tx ID: {}", Transaction::id()));
-    log(&format!("withdraw tx owner: {}", Transaction::owner()));
-    log(&format!("withdraw tx target: {}", Transaction::target()));
-    log(&format!("withdraw block height: {}", Block::height()));
     let caller = Transaction::owner()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;

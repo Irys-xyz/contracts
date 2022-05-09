@@ -2,7 +2,7 @@ use rand_xoshiro::rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
 use bundlr_contracts_shared::{
-    contract_utils::js_imports::{log, Block, SmartWeave, Transaction},
+    contract_utils::js_imports::{Block, SmartWeave, Transaction},
     Address,
 };
 
@@ -55,13 +55,6 @@ where
 }
 
 pub async fn update_epoch(mut state: State) -> ActionResult {
-    log(&format!("validators join caller {}", SmartWeave::caller()));
-    log(&format!(
-        "validators join transaction owner {}",
-        Transaction::owner(),
-    ));
-    log(&format!("{} validators", state.validators.len()));
-
     // TODO: should this be SmartWeave::caller instead?
     let caller = Transaction::owner()
         .parse::<Address>()

@@ -1,7 +1,4 @@
-use bundlr_contracts_shared::{
-    contract_utils::js_imports::{log, SmartWeave, Transaction},
-    Address, Amount,
-};
+use bundlr_contracts_shared::{contract_utils::js_imports::SmartWeave, Address, Amount};
 
 use crate::action::ActionResult;
 use crate::contract_utils::handler_result::HandlerResult;
@@ -11,12 +8,6 @@ use crate::state::State;
 use super::allowance::spend_allowance;
 
 pub fn transfer(mut state: State, to: Address, amount: Amount) -> ActionResult {
-    log(&format!("token transfer caller {}", SmartWeave::caller()));
-    log(&format!(
-        "token transfer Transaction owner {}",
-        Transaction::owner(),
-    ));
-
     if amount == Amount::ZERO {
         return Err(ContractError::AmountMustBeHigherThanZero);
     }
@@ -43,15 +34,6 @@ pub fn transfer(mut state: State, to: Address, amount: Amount) -> ActionResult {
 }
 
 pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -> ActionResult {
-    log(&format!(
-        "token transfer_from caller {}",
-        SmartWeave::caller()
-    ));
-    log(&format!(
-        "token transfer_from Transaction owner {}",
-        Transaction::owner(),
-    ));
-
     if amount == Amount::ZERO {
         return Err(ContractError::AmountMustBeHigherThanZero);
     }
