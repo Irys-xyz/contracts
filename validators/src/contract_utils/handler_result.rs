@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum HandlerResult<State, QueryResponseMsg> {
     NewState(State),

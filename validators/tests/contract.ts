@@ -13,9 +13,23 @@ export class State {
   bundlersContract: string;
   epoch: { seq: string; tx: string; height: string };
   epochDuration: number;
-  stake: string;
+  minimumStake: string;
   token: string;
-  validators: { [key: string]: boolean };
+  validators: { [key: string]: string };
+  nominatedValidators: string[];
+  slashProposals: {
+    [key: string]: [SlashProposal, string, string, string, any]; // TODO: model voting data correctly
+  };
+}
+
+export class SlashProposal {
+  id: string;
+  size: number;
+  fee: string;
+  currency: string;
+  block: string;
+  validator: string;
+  signature: string;
 }
 
 export interface ValidatorsContract extends Contract<State> {
@@ -24,16 +38,15 @@ export interface ValidatorsContract extends Contract<State> {
   nominatedValidators(): Promise<string[]>;
   bundler(): Promise<string>;
   bundlersContract(): Promise<string>;
-  stake(): Promise<bigint>;
+  minimumStake(): Promise<bigint>;
   token(): Promise<string>;
   epoch(): Promise<{ seq: string; tx: string; height: string }>;
   epochDuration(): Promise<number>;
   updateEpoch(): Promise<string | null>;
-  join(): Promise<string | null>;
+  join(stake: bigint): Promise<string | null>;
   leave(): Promise<string | null>;
-  proposeSlash(): Promise<string | null>;
-  voteSlash(): Promise<string | null>;
-  syncSlash(): Promise<string | null>;
+  proposeSlash(proposal: SlashProposal): Promise<string | null>;
+  voteSlash(tx: string, vote: "for" | "against"): Promise<string | null>;
 }
 
 class ValidatorsContractImpl
@@ -70,9 +83,9 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string;
   }
-  async stake() {
+  async minimumStake() {
     const interactionResult = await this.viewState({
-      function: "stake",
+      function: "minimumStake",
     });
     if (interactionResult.type !== "ok") {
       throw Error(interactionResult.errorMessage);
@@ -125,9 +138,10 @@ class ValidatorsContractImpl
       function: "updateEpoch",
     });
   }
-  async join() {
+  async join(stake: bigint) {
     return this.writeInteraction({
       function: "join",
+      stake: stake.toString(),
     });
   }
   async leave() {
@@ -135,19 +149,17 @@ class ValidatorsContractImpl
       function: "leave",
     });
   }
-  async proposeSlash() {
+  async proposeSlash(proposal: SlashProposal) {
     return this.writeInteraction({
       function: "proposeSlash",
+      proposal,
     });
   }
-  async voteSlash() {
+  async voteSlash(tx: string, vote: "for" | "against") {
     return this.writeInteraction({
       function: "voteSlash",
-    });
-  }
-  async syncSlash() {
-    return this.writeInteraction({
-      function: "syncSlash",
+      tx,
+      vote,
     });
   }
 }
@@ -172,7 +184,7 @@ export async function deploy(
     ...stateFromFile,
     token,
     bundlersContract,
-    stake: stake.toString(),
+    minimumStake: stake.toString(),
     bundler: bundler.address,
     epoch: {
       seq: "0",

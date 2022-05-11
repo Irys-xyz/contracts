@@ -29,22 +29,20 @@ pub async fn leave(mut state: State) -> ActionResult {
         return Err(ContractError::NominatedValidatorCannotLeave(caller));
     }
 
-    if let Some(index) = state
-        .validators
-        .iter()
-        .position(|address| address == &caller)
-    {
-        state.validators.remove(index);
+    // FIXME: if the caller has voted in a currently open slash proposal, prevent leaving
+
+    let stake = if let Some(stake) = state.validators.remove(&caller) {
+        stake
     } else {
         return Err(ContractError::InvalidValidator(caller));
-    }
+    };
 
     let result = SmartWeave::write(
         &state.token.to_string(),
         JsValue::from_serde(&Input {
             function: "transfer".to_string(),
             to: caller.clone(),
-            amount: state.stake,
+            amount: stake,
         })
         .unwrap(),
     )

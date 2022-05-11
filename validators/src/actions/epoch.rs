@@ -1,4 +1,6 @@
-use bundlr_contracts_shared::contract_utils::js_imports::{Contract, SmartWeave};
+use std::str::FromStr;
+
+use bundlr_contracts_shared::TransactionId;
 use rand_xoshiro::rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
@@ -11,6 +13,8 @@ use crate::{
     action::ActionResult, contract_utils::handler_result::HandlerResult, error::ContractError,
     state::State,
 };
+
+use super::slashing;
 
 struct TransactionBasedRngSeed(pub [u8; 32]);
 
@@ -38,7 +42,7 @@ impl TryFrom<&str> for TransactionBasedRngSeed {
     }
 }
 
-fn pick_random_nominees<Rng>(rng: &mut Rng, validators: &[Address], count: u8) -> Vec<Address>
+fn pick_random_nominees<Rng>(rng: &mut Rng, validators: &[&Address], count: u8) -> Vec<Address>
 where
     Rng: RngCore,
 {
@@ -72,7 +76,12 @@ pub async fn update_epoch(mut state: State) -> ActionResult {
         state.epoch.height + state.epoch_duration as u128
     };
 
-    state.epoch = state.epoch.next(Transaction::id(), next_epoch_height);
+    state.epoch = state.epoch.next(
+        TransactionId::from_str(&Transaction::id()).map_err(|err| {
+            ContractError::ParseError(format!("Failed to parse transaction ID: {}", err))
+        })?,
+        next_epoch_height,
+    );
 
     let seed = TransactionBasedRngSeed::try_from(Transaction::id().as_str()).map_err(|()| {
         ContractError::RuntimeError("could not extract 32 bytes from Transaction::id()".to_string())
@@ -82,14 +91,17 @@ pub async fn update_epoch(mut state: State) -> ActionResult {
 
     // Pick 10 random nominees or pick all if number of validatros is 10 or less
     if state.validators.len() <= state.max_num_nominated_validators as usize {
-        state.nominated_validators = state.validators.iter().cloned().collect::<Vec<Address>>();
+        state.nominated_validators = state.validators.keys().cloned().collect::<Vec<Address>>();
     } else {
         state.nominated_validators = pick_random_nominees(
             &mut rng,
-            &state.validators,
+            &state.validators.keys().collect::<Vec<&Address>>(),
             state.max_num_nominated_validators,
         );
     };
+
+    // on each epoch update, check if there are any expired slash proposals
+    slashing::on_update_epoch(&mut state, Block::height() as u128);
 
     Ok(HandlerResult::NewState(state))
 }

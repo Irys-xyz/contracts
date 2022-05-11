@@ -26,10 +26,18 @@ struct Result {
     result_type: String,
 }
 
-pub async fn join(mut state: State) -> ActionResult {
+pub async fn join(mut state: State, stake: Amount) -> ActionResult {
     let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
+
+    if stake < state.minimum_stake {
+        return Err(ContractError::InvalidStake);
+    }
+
+    if state.validators.contains_key(&caller) {
+        return Err(ContractError::AlreadyJoined);
+    }
 
     let result = SmartWeave::write(
         &state.token.to_string(),
@@ -38,7 +46,7 @@ pub async fn join(mut state: State) -> ActionResult {
             from: caller.clone(),
             to: Address::from_str(&Contract::id())
                 .map_err(|err| ContractError::ParseError(err.to_string()))?,
-            amount: state.stake,
+            amount: stake,
         })
         .unwrap(),
     )
@@ -50,7 +58,7 @@ pub async fn join(mut state: State) -> ActionResult {
         return Err(ContractError::TransferFailed);
     }
 
-    state.validators.push(caller);
+    state.validators.insert(caller, stake);
 
     Ok(HandlerResult::NewState(state))
 }

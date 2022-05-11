@@ -51,13 +51,14 @@ thread_local! {
 pub async fn handle(interaction: JsValue) -> Option<JsValue> {
     let result: Result<HandlerResult<State, QueryResponseMsg>, ContractError>;
     let action: Result<Action, Error> = interaction.into_serde();
-    if action.is_err() {
+    if let Err(err) = action {
         // cannot pass any data from action.error here - ends up with
         // "FnOnce called more than once" error from wasm-bindgen for
         // "foreign_call" testcase.
-        result = Err(ContractError::RuntimeError(
-            "Error while parsing input".to_string(),
-        ));
+        result = Err(ContractError::RuntimeError(format!(
+            "Error while parsing input: {:?}",
+            err
+        )));
     } else {
         // not sure about clone here
         let current_state = STATE.with(|service| service.borrow().clone());

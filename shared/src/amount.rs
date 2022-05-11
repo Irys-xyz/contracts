@@ -46,6 +46,12 @@ impl From<u128> for Amount {
     }
 }
 
+impl From<&u128> for Amount {
+    fn from(val: &u128) -> Self {
+        Amount(*val)
+    }
+}
+
 impl Deref for Amount {
     type Target = u128;
 

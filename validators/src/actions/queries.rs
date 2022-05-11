@@ -4,7 +4,7 @@ use crate::state::State;
 
 pub fn validators(state: State) -> ActionResult {
     Ok(QueryResponse(QueryResponseMsg::Validators(
-        state.validators,
+        state.validators.keys().cloned().collect(),
     )))
 }
 
@@ -14,8 +14,8 @@ pub fn nominated_validators(state: State) -> ActionResult {
     )))
 }
 
-pub fn stake(state: State) -> ActionResult {
-    Ok(QueryResponse(QueryResponseMsg::Stake(state.stake)))
+pub fn minimum_stake(state: State) -> ActionResult {
+    Ok(QueryResponse(QueryResponseMsg::Stake(state.minimum_stake)))
 }
 
 pub fn token(state: State) -> ActionResult {

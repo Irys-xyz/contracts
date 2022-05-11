@@ -1,5 +1,9 @@
-use crate::{contract_utils::handler_result::HandlerResult, epoch::Epoch};
-use bundlr_contracts_shared::{Address, Amount};
+use crate::{
+    actions::slashing::{Proposal, Vote},
+    contract_utils::handler_result::HandlerResult,
+    epoch::Epoch,
+};
+use bundlr_contracts_shared::{Address, Amount, TransactionId};
 use serde::{Deserialize, Serialize};
 
 use crate::{error::ContractError, state::State};
@@ -9,21 +13,20 @@ use crate::{error::ContractError, state::State};
 pub enum Action {
     Validators,
     NominatedValidators,
-    Stake,
+    MinimumStake,
     Token,
     Epoch,
     EpochDuration,
     Bundler,
     BundlersContract,
-    Join,
+    Join { stake: Amount },
     Leave,
     UpdateEpoch,
-    ProposeSlash,
-    VoteSlash,
-    SyncSlashed,
+    ProposeSlash { proposal: Proposal },
+    VoteSlash { tx: TransactionId, vote: Vote },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum QueryResponseMsg {
     Bundler(Address),

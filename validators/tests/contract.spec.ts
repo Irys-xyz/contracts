@@ -24,7 +24,13 @@ import {
   State as BundlersState,
 } from "../../bundlers/tests/contract";
 
-import { connect, deploy, State, ValidatorsContract } from "./contract";
+import {
+  connect,
+  deploy,
+  SlashProposal,
+  State,
+  ValidatorsContract,
+} from "./contract";
 
 jest.setTimeout(30000);
 
@@ -150,7 +156,7 @@ describe("Bundlers Contract", () => {
   });
 
   it("join should fail when allowance is not properly set", async () => {
-    await connections[2].validators.join();
+    await connections[2].validators.join(BigInt(100));
     await mineBlock(arweave);
 
     expect(await connections[2].validators.validators()).not.toContain(
@@ -160,12 +166,12 @@ describe("Bundlers Contract", () => {
 
   it("join should succeed after approving allowance for the stake", async () => {
     let stake = await connections[2].validators
-      .stake()
+      .minimumStake()
       .then((stake) => BigInt(stake));
     await connections[2].token.approve(contractTxId, stake);
     await mineBlock(arweave);
 
-    await connections[2].validators.join();
+    await connections[2].validators.join(stake);
     await mineBlock(arweave);
 
     expect(await connections[2].validators.validators()).toContain(
@@ -188,12 +194,12 @@ describe("Bundlers Contract", () => {
 
   it("owner can update epoch", async () => {
     let stake = await connections[2].validators
-      .stake()
+      .minimumStake()
       .then((stake) => BigInt(stake));
     await connections[2].token.approve(contractTxId, stake);
     await mineBlock(arweave);
 
-    await connections[2].validators.join();
+    await connections[2].validators.join(stake);
     await mineBlock(arweave);
 
     await connections[1].validators.updateEpoch();
@@ -205,7 +211,7 @@ describe("Bundlers Contract", () => {
   });
 
   it("too frequent updates to epoch fails", async () => {
-    await connections[2].validators.join();
+    await connections[2].validators.updateEpoch();
     await mineBlock(arweave);
 
     // TODO: how to check that the tx fails?
@@ -213,8 +219,8 @@ describe("Bundlers Contract", () => {
   });
 
   it("update epoch selects 10 random validators", async () => {
-    let stake = await connections[1].validators
-      .stake()
+    let minimumStake = await connections[1].validators
+      .minimumStake()
       .then((stake) => BigInt(stake));
 
     let epoch: { seq: bigint; tx: string; height: bigint } =
@@ -231,12 +237,12 @@ describe("Bundlers Contract", () => {
       .then((duration) => BigInt(duration));
 
     for (let i = 3; i < accounts.length; ++i) {
-      await connections[i].token.approve(contractTxId, stake);
+      await connections[i].token.approve(contractTxId, minimumStake);
     }
     await mineBlock(arweave);
 
     for (let i = 3; i < accounts.length; ++i) {
-      await connections[i].validators.join();
+      await connections[i].validators.join(minimumStake);
     }
     await mineBlock(arweave);
 
@@ -266,5 +272,33 @@ describe("Bundlers Contract", () => {
     let nominated2 = await connections[1].validators.nominatedValidators();
 
     expect(nominated1.sort()).not.toEqual(nominated2.sort());
+  });
+
+  it("validator can propose slashing", async () => {
+    await connections[2].validators.proposeSlash({
+      id: "tx1",
+      size: 1,
+      fee: "1",
+      currency: "BTC",
+      block: "100",
+      validator: accounts[2].address,
+      signature: "this is not verified",
+    });
+    await mineBlock(arweave);
+
+    let state = await connections[1].validators.currentState();
+
+    expect(state.slashProposals["tx1"]).not.toBeUndefined;
+  });
+
+  it("validator can propose slashing", async () => {
+    await connections[3].validators.voteSlash("tx1", "for");
+    await mineBlock(arweave);
+
+    let state = await connections[1].validators.currentState();
+
+    expect(state.slashProposals["tx1"][4].Open[accounts[3].address]).toEqual(
+      "for"
+    );
   });
 });

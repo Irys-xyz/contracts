@@ -16,5 +16,8 @@ data-encoding = { version = "2.3.2" }
 wasm-bindgen = { version = "= 0.2.79", features = ["serde-serialize"] }
 wasm-bindgen-futures = { version = "0.4.29" }
 
+[dev-dependencies]
+futures = "0.3.21"
+
 [package.metadata.wasm-pack.profile.profiling.wasm-bindgen]
 demangle-name-section = false
