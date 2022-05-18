@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "shared",
+    "token",
+    "bundlers",
+    "validators",
+]
