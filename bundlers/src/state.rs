@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -11,4 +11,5 @@ pub struct State {
     pub bundlers: HashMap<Address, Option<BlockHeight>>,
     pub withdraw_delay: u16,
     pub stake: Amount,
+    pub allowed_interactors: HashSet<Address>,
 }

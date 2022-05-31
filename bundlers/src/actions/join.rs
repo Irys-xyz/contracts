@@ -31,6 +31,10 @@ pub async fn join(mut state: State) -> ActionResult {
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 
+    if !state.allowed_interactors.contains(&caller) {
+        return Err(ContractError::Forbidden);
+    }
+
     let result = SmartWeave::write(
         &state.token.to_string(),
         JsValue::from_serde(&Input {

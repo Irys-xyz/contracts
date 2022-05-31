@@ -2,5 +2,6 @@
   "bundlers": {},
   "withdrawDelay": 21600,
   "token": null,
-  "stake": "0"
+  "stake": "0",
+  "allowedInteractors": []
 }

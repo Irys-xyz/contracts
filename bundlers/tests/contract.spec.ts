@@ -55,7 +55,7 @@ describe("Bundlers Contract", () => {
 
     // Create accounts, fund them and get address
     accounts = await Promise.all(
-      [0, 1].map(async (_) => {
+      [0, 1, 2, 3].map(async (_) => {
         let wallet = await arweave.wallets.generate();
         await addFunds(arweave, wallet);
         let address = await arweave.wallets.jwkToAddress(wallet);
@@ -117,6 +117,65 @@ describe("Bundlers Contract", () => {
       "application/wasm"
     );
     expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual("rust");
+  });
+
+  it("contract owner has implicit right to add interactors", async () => {
+    expect(await connections[0].bundlers.allowedInteractors()).not.toContain(
+      accounts[0].address
+    );
+
+    await connections[0].bundlers.addAllowedInteractor(accounts[1].address);
+    await mineBlock(arweave);
+
+    expect(await connections[0].bundlers.allowedInteractors()).toContain(
+      accounts[1].address
+    );
+  });
+
+  it("allowed interactor has right to add other interactors", async () => {
+    expect(await connections[0].bundlers.allowedInteractors()).not.toContain(
+      accounts[2].address
+    );
+    expect(await connections[0].bundlers.allowedInteractors()).not.toContain(
+      accounts[3].address
+    );
+
+    await connections[1].bundlers.addAllowedInteractor(accounts[2].address);
+    await connections[1].bundlers.addAllowedInteractor(accounts[3].address);
+    await mineBlock(arweave);
+
+    expect(await connections[0].bundlers.allowedInteractors()).toContain(
+      accounts[2].address
+    );
+    expect(await connections[0].bundlers.allowedInteractors()).toContain(
+      accounts[3].address
+    );
+  });
+
+  it("allowed interactor has right to remove other interactors", async () => {
+    expect(await connections[0].bundlers.allowedInteractors()).toContain(
+      accounts[3].address
+    );
+
+    await connections[1].bundlers.removeAllowedInteractor(accounts[3].address);
+    await mineBlock(arweave);
+
+    expect(await connections[0].bundlers.allowedInteractors()).not.toContain(
+      accounts[3].address
+    );
+  });
+
+  it("contract owner has implicit right to remove other interactors", async () => {
+    expect(await connections[0].bundlers.allowedInteractors()).toContain(
+      accounts[2].address
+    );
+
+    await connections[0].bundlers.removeAllowedInteractor(accounts[2].address);
+    await mineBlock(arweave);
+
+    expect(await connections[0].bundlers.allowedInteractors()).not.toContain(
+      accounts[2].address
+    );
   });
 
   it("join should fail when allowance is not properly set", async () => {
