@@ -18,6 +18,7 @@ export class State {
 export interface BundlersContract extends Contract<State> {
   currentState(): Promise<State>;
   bundlers(): Promise<{ [key: string]: string }>;
+  allowedInteractors(): Promise<Set<string>>;
   withdrawDelay(): Promise<number>;
   stake(): Promise<bigint>;
   token(): Promise<string>;
@@ -25,6 +26,8 @@ export interface BundlersContract extends Contract<State> {
   leave(): Promise<string | null>;
   withdraw(): Promise<string | null>;
   syncSlash(): Promise<string | null>;
+  addAllowedInteractor(address: string): Promise<string | null>;
+  removeAllowedInteractor(address: string): Promise<string | null>;
 }
 
 class BundlersContractImpl
@@ -61,6 +64,15 @@ class BundlersContractImpl
     }
     return interactionResult.result as { [key: string]: string };
   }
+  async allowedInteractors() {
+    const interactionResult = await this.viewState({
+      function: "allowedInteractors",
+    });
+    if (interactionResult.type !== "ok") {
+      throw Error(interactionResult.errorMessage);
+    }
+    return interactionResult.result as Set<string>;
+  }
   async withdrawDelay() {
     const interactionResult = await this.viewState({
       function: "withdrawDelay",
@@ -90,13 +102,25 @@ class BundlersContractImpl
       function: "syncSlash",
     });
   }
+  async addAllowedInteractor(address: string) {
+    return this.writeInteraction({
+      function: "addAllowedInteractor",
+      interactor: address,
+    });
+  }
+  async removeAllowedInteractor(address: string) {
+    return this.writeInteraction({
+      function: "removeAllowedInteractor",
+      interactor: address,
+    });
+  }
 }
 
 export async function deploy(
   smartweave: SmartWeave,
   token: string,
   stake: bigint,
-  owner: { wallet: ArWallet }
+  owner: { wallet: ArWallet; address: string }
 ): Promise<[State, string]> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
