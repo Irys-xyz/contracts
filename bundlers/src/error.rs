@@ -4,7 +4,10 @@ use serde::Serialize;
 #[derive(Serialize)]
 pub enum ContractError {
     AlreadyLeaving(Address, BlockHeight),
+    AlreadyInteractor(Address),
+    Forbidden,
     InvalidBundler(Address),
+    InvalidInteractor(Address),
     ParseError(String),
     RuntimeError(String),
     TransferFailed,

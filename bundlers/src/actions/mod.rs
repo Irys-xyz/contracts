@@ -1,3 +1,4 @@
+pub mod interactors;
 mod join;
 mod leave;
 mod withdraw;

@@ -16,3 +16,8 @@ pub fn stake(state: State) -> ActionResult {
 pub fn token(state: State) -> ActionResult {
     Ok(QueryResponse(QueryResponseMsg::Token(state.token)))
 }
+pub fn allowed_interactors(state: State) -> ActionResult {
+    Ok(QueryResponse(QueryResponseMsg::AllowedInteractors(
+        state.allowed_interactors,
+    )))
+}

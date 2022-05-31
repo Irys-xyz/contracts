@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::contract_utils::handler_result::HandlerResult;
 use bundlr_contracts_shared::{Address, Amount, BlockHeight};
@@ -17,6 +17,9 @@ pub enum Action {
     Leave,
     SyncSlashed,
     Withdraw,
+    AllowedInteractors,
+    AddAllowedInteractor { interactor: Address },
+    RemoveAllowedInteractor { interactor: Address },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -26,6 +29,7 @@ pub enum QueryResponseMsg {
     Stake(Amount),
     Bundlers(HashMap<Address, Option<BlockHeight>>),
     WithdrawDelay(u16),
+    AllowedInteractors(HashSet<Address>),
 }
 
 pub type ActionResult = Result<HandlerResult<State, QueryResponseMsg>, ContractError>;
