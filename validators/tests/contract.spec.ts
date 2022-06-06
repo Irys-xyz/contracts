@@ -291,7 +291,7 @@ describe("Bundlers Contract", () => {
     expect(state.slashProposals["tx1"]).not.toBeUndefined;
   });
 
-  it("validator can propose slashing", async () => {
+  it("validator can vote slashing", async () => {
     await connections[3].validators.voteSlash("tx1", "for");
     await mineBlock(arweave);
 
