@@ -8,7 +8,7 @@ import {
 } from "redstone-smartweave";
 import path from "path";
 
-export class TokenState {
+export type TokenState = {
   ticker: string;
   name: string | null | unknown;
   decimals: number;
@@ -22,7 +22,7 @@ export class TokenState {
       [key: string]: string;
     };
   };
-}
+};
 
 export class Balance {
   balance: bigint;
