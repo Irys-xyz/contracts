@@ -29,3 +29,12 @@ jobs:
       - name: Bundlers - run tests
         run: yarn test
         working-directory: bundlers
+      - name: Validators - install
+        run: yarn
+        working-directory: validators
+      - name: Validators - build
+        run: yarn build
+        working-directory: validators
+      - name: Validators - run tests
+        run: yarn test
+        working-directory: validators
