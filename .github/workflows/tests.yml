@@ -38,3 +38,9 @@ jobs:
       - name: Validators - run tests
         run: yarn test
         working-directory: validators
+      - name: Contract Gateway - install
+        run: npm ci
+        working-directory: gateway
+      - name: Contract Gateway - test
+        run: npm run test
+        working-directory: gateway

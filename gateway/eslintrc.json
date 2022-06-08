@@ -1,0 +1,53 @@
+{
+  "env": {
+    "browser": false,
+    "es6": true,
+    "node": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "tsconfig.json",
+    "sourceType": "module"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts"] //ignore .js files
+    }
+  ],
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "quotes": ["error", "double"],
+    "object-curly-spacing": ["error", "always"],
+    "@typescript-eslint/explicit-function-return-type": "error",
+    "no-var": "error",
+    "padding-line-between-statements": [
+      "error",
+      { "blankLine": "always", "prev": "block-like", "next": "function" }
+    ],
+    "space-infix-ops": "error",
+    "spaced-comment": "error",
+    "arrow-spacing": "error",
+    "@typescript-eslint/naming-convention": [
+      "error",
+      { "selector": "class", "format": ["PascalCase"] },
+      { "selector": "interface", "format": ["PascalCase"] },
+      {
+        "selector": "classProperty",
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      },
+      { "selector": "objectLiteralProperty", "format": null },
+      {
+        "selector": "default",
+        "format": ["strictCamelCase"],
+        "leadingUnderscore": "allow"
+      } //this must be the last rule
+    ]
+  }
+}
