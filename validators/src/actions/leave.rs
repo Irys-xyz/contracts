@@ -31,8 +31,8 @@ pub async fn leave(mut state: State) -> ActionResult {
 
     // FIXME: if the caller has voted in a currently open slash proposal, prevent leaving
 
-    let stake = if let Some(stake) = state.validators.remove(&caller) {
-        stake
+    let validator = if let Some(validator) = state.validators.remove(&caller) {
+        validator
     } else {
         return Err(ContractError::InvalidValidator(caller));
     };
@@ -42,7 +42,7 @@ pub async fn leave(mut state: State) -> ActionResult {
         JsValue::from_serde(&Input {
             function: "transfer".to_string(),
             to: caller.clone(),
-            amount: stake,
+            amount: validator.stake,
         })
         .unwrap(),
     )

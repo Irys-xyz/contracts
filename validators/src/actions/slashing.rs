@@ -3,8 +3,10 @@ use std::{collections::HashMap, str::FromStr};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    action::ActionResult, contract_utils::handler_result::HandlerResult, error::ContractError,
-    state::State,
+    action::ActionResult,
+    contract_utils::handler_result::HandlerResult,
+    error::ContractError,
+    state::{State, Validator},
 };
 use bundlr_contracts_shared::{u128_utils, Address, Amount, TransactionId};
 
@@ -21,7 +23,6 @@ pub struct Proposal {
     signature: String,
 }
 
-pub type Validator = Address;
 pub type Stake = Amount;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -44,9 +45,9 @@ impl From<i128> for Vote {
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub enum Voting {
-    Open(HashMap<Validator, Vote>),
+    Open(HashMap<Address, Vote>),
     Closed {
-        votes: HashMap<Validator, (Vote, Stake)>,
+        votes: HashMap<Address, (Vote, Stake)>,
         final_vote: Vote,
     },
 }
@@ -164,17 +165,25 @@ pub async fn vote(
         return Err(ContractError::AlreadyVoted);
     }
 
-    let (total_stake, voted_stake, result) = evaluate_votes(&state.validators, &votes);
+    let (total_stake, voted_stake, result) = evaluate_votes(&state.validators, votes);
 
     // close voting, if all votes are casted or the remaining stake cannot flip the vote
     if total_stake - voted_stake < result.abs() as u128 || total_stake == voted_stake {
         let result = result.into();
         let votes = votes
             .iter()
-            .map(|(validator, vote)| {
+            .map(|(address, vote)| {
                 (
-                    validator.clone(),
-                    (*vote, state.validators.get(validator).unwrap().clone()),
+                    address.clone(),
+                    (
+                        *vote,
+                        state
+                            .validators
+                            .get(address)
+                            .map(|validator| validator.stake)
+                            .unwrap()
+                            .clone(),
+                    ),
                 )
             })
             .collect();
@@ -193,32 +202,33 @@ pub async fn vote(
 }
 
 fn evaluate_votes(
-    validators: &HashMap<Validator, Stake>,
-    votes: &HashMap<Validator, Vote>,
+    validators: &HashMap<Address, Validator>,
+    votes: &HashMap<Address, Vote>,
 ) -> (u128, u128, i128) {
     // dereference Amount to u128 so that the computaion later is easier
     let total_stake = *validators
         .iter()
-        .fold(Amount::default(), |total_stake, (_, stake)| {
-            total_stake + *stake
+        .fold(Amount::default(), |total_stake, (_, validator)| {
+            total_stake + validator.stake
         });
 
-    let (voted_stake, result) = votes.iter().fold(
-        (0u128, 0i128),
-        |(voted_stake, result), (validator, vote)| {
-            let voter_stake = validators
-                .get(validator)
-                .expect("Could not find the validator who has voted earlier");
-            let stake_weighted_vote =
-                match vote {
-                    Vote::For => i128::try_from(**voter_stake)
-                        .expect("Could not fit validator stake in i128"),
-                    Vote::Against => -i128::try_from(**voter_stake)
+    let (voted_stake, result) =
+        votes
+            .iter()
+            .fold((0u128, 0i128), |(voted_stake, result), (address, vote)| {
+                let voter_stake = validators
+                    .get(address)
+                    .map(|validator| validator.stake)
+                    .expect("Could not find the validator who has voted earlier");
+                let stake_weighted_vote = match vote {
+                    Vote::For => {
+                        i128::try_from(*voter_stake).expect("Could not fit validator stake in i128")
+                    }
+                    Vote::Against => -i128::try_from(*voter_stake)
                         .expect("Could not fit validator stake in i128"),
                 };
-            (voted_stake + **voter_stake, result + stake_weighted_vote)
-        },
-    );
+                (voted_stake + *voter_stake, result + stake_weighted_vote)
+            });
     (total_stake, voted_stake, result)
 }
 
@@ -272,7 +282,15 @@ pub(super) fn on_update_epoch(state: &mut State, current_block_height: u128) {
                 .map(|(validator, vote)| {
                     (
                         validator.clone(),
-                        (*vote, state.validators.get(validator).unwrap().clone()),
+                        (
+                            *vote,
+                            state
+                                .validators
+                                .get(validator)
+                                .map(|validator| validator.stake)
+                                .unwrap()
+                                .clone(),
+                        ),
                     )
                 })
                 .collect();
@@ -288,41 +306,51 @@ mod tests {
     use futures::executor::LocalPool;
 
     use crate::{
-        actions::slashing::{propose, Proposal, Stake, Validator, Voting},
+        actions::slashing::{propose, Proposal, Voting},
         contract_utils::handler_result::HandlerResult,
         epoch::Epoch,
         error::ContractError,
-        state::State,
+        state::{State, Validator},
     };
 
     use super::{evaluate_votes, on_update_epoch, vote, TransactionId, Vote};
 
     fn state() -> State {
-        static VALIDATORS_AND_STAKES: [(&str, u128); 13] = [
-            ("a1", 10000),
-            ("a2", 20000),
-            ("a3", 10000),
-            ("a4", 15000),
-            ("a5", 10000),
-            ("a6", 10000),
-            ("a7", 10010),
-            ("a8", 10000),
-            ("a9", 10010),
-            ("a10", 10000),
-            ("a11", 10000),
-            ("a12", 30000),
-            ("a13", 15000),
+        static VALIDATORS_AND_STAKES: [(&str, u128, &str); 13] = [
+            ("a1", 10000, "https://a1.example.com"),
+            ("a2", 20000, "https://a2.example.com"),
+            ("a3", 10000, "https://a3.example.com"),
+            ("a4", 15000, "https://a4.example.com"),
+            ("a5", 10000, "https://a5.example.com"),
+            ("a6", 10000, "https://a6.example.com"),
+            ("a7", 10010, "https://a7.example.com"),
+            ("a8", 10000, "https://a8.example.com"),
+            ("a9", 10010, "https://a9.example.com"),
+            ("a10", 10000, "https://a10.example.com"),
+            ("a11", 10000, "https://a11.example.com"),
+            ("a12", 30000, "https://a12.example.com"),
+            ("a13", 15000, "https://a13.example.com"),
         ];
 
         let validators = VALIDATORS_AND_STAKES
             .iter()
-            .map(|(address, stake)| (Validator::from_str(address).unwrap(), stake.into()))
-            .collect::<HashMap<Validator, Stake>>();
+            .map(|(address, stake, url)| {
+                let address = Address::from_str(address).unwrap();
+                (
+                    address.clone(),
+                    Validator {
+                        address,
+                        url: url.parse().unwrap(),
+                        stake: stake.into(),
+                    },
+                )
+            })
+            .collect::<HashMap<Address, Validator>>();
 
         let nominated_validators = VALIDATORS_AND_STAKES[2..12]
             .iter()
-            .map(|(address, _)| Validator::from_str(address).unwrap())
-            .collect::<Vec<Validator>>();
+            .map(|(address, _, _)| Address::from_str(address).unwrap())
+            .collect::<Vec<Address>>();
 
         let slash_proposals = [
             (
@@ -337,7 +365,7 @@ mod tests {
                         validator: "a1".to_string(),
                         signature: "foo".to_string(),
                     },
-                    Validator::from_str("a1").unwrap(),
+                    Address::from_str("a1").unwrap(),
                     2350,
                     TransactionId::from_str("proposal_tx_id_1").unwrap(),
                     Voting::Closed {
@@ -352,9 +380,12 @@ mod tests {
                         ]
                         .into_iter()
                         .map(|(validator, vote)| {
-                            let validator = Validator::from_str(validator).unwrap();
-                            let stake = validators.get(&validator).unwrap();
-                            (validator, (vote, *stake))
+                            let validator_address = Address::from_str(validator).unwrap();
+                            let stake = validators
+                                .get(&validator_address)
+                                .map(|validator| validator.stake)
+                                .unwrap();
+                            (validator_address, (vote, stake))
                         })
                         .collect(),
                         final_vote: Vote::For,
@@ -373,7 +404,7 @@ mod tests {
                         validator: "a3".to_string(),
                         signature: "foo".to_string(),
                     },
-                    Validator::from_str("a3").unwrap(),
+                    Address::from_str("a3").unwrap(),
                     2350,
                     TransactionId::from_str("proposal_tx_id_2").unwrap(),
                     Voting::Open(
@@ -406,7 +437,7 @@ mod tests {
                         validator: "a4".to_string(),
                         signature: "foo".to_string(),
                     },
-                    Validator::from_str("a3").unwrap(),
+                    Address::from_str("a3").unwrap(),
                     2350,
                     TransactionId::from_str("proposal_tx_id_2").unwrap(),
                     Voting::Open(
@@ -432,7 +463,7 @@ mod tests {
             ),
         ]
         .into_iter()
-        .collect::<HashMap<TransactionId, (Proposal, Validator, u128, TransactionId, Voting)>>();
+        .collect::<HashMap<TransactionId, (Proposal, Address, u128, TransactionId, Voting)>>();
 
         State {
             bundler: Address::from_str("bundler").unwrap(),

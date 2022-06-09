@@ -156,7 +156,10 @@ describe("Bundlers Contract", () => {
   });
 
   it("join should fail when allowance is not properly set", async () => {
-    await connections[2].validators.join(BigInt(100));
+    await connections[2].validators.join(
+      BigInt(100),
+      new URL("https://example.com")
+    );
     await mineBlock(arweave);
 
     expect(await connections[2].validators.validators()).not.toContain(
@@ -171,7 +174,7 @@ describe("Bundlers Contract", () => {
     await connections[2].token.approve(contractTxId, stake);
     await mineBlock(arweave);
 
-    await connections[2].validators.join(stake);
+    await connections[2].validators.join(stake, new URL("https://example.com"));
     await mineBlock(arweave);
 
     expect(await connections[2].validators.validators()).toContain(
@@ -199,7 +202,7 @@ describe("Bundlers Contract", () => {
     await connections[2].token.approve(contractTxId, stake);
     await mineBlock(arweave);
 
-    await connections[2].validators.join(stake);
+    await connections[2].validators.join(stake, new URL("https://example.com"));
     await mineBlock(arweave);
 
     await connections[1].validators.updateEpoch();
@@ -242,7 +245,10 @@ describe("Bundlers Contract", () => {
     await mineBlock(arweave);
 
     for (let i = 3; i < accounts.length; ++i) {
-      await connections[i].validators.join(minimumStake);
+      await connections[i].validators.join(
+        minimumStake,
+        new URL("https://example.com")
+      );
     }
     await mineBlock(arweave);
 
