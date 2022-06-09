@@ -16,7 +16,7 @@ async function create(
   const router = express.Router();
 
   router.get("/state", async (_: Request, res: Response) => {
-    contractConnection.currentState().then((state) => {
+    return contractConnection.currentState().then((state) => {
       res.status(200).send(state);
     });
   });
@@ -43,7 +43,7 @@ async function create(
 
   router.post("/vote", (req: Request, res: Response) => {
     try {
-      // TODO: instead of validating data, pass it to the contract
+      // TODO: instead of validating data, pass it to the contraict
       // and validate the interaction using smartweave
       if (!req.body.tx) {
         throw Error("Invalid request data, missing `tx`");

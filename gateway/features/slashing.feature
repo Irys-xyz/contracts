@@ -32,3 +32,10 @@ Feature: Slashing
      When requesting contract state
      Then the response code is 200
       And response body is valid JSON for validators contract state
+
+  Scenario: after proposing slashing, validator check the tx status
+    Given the validator is joined
+      And the validator has proposed slashing
+     When requesting status of the tx
+     Then the response code is 200
+      And the response body defines "confirmed.block_height" field

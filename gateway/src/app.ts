@@ -3,7 +3,8 @@ import express, { Express, Request, Response } from "express";
 import Arweave from "arweave";
 import { ArWallet, SmartWeave } from "redstone-smartweave";
 
-import router from "./validators";
+import validators from "./validators";
+import transactions from "./transactions";
 
 async function create(
   arweave: Arweave,
@@ -14,7 +15,14 @@ async function create(
   const app: Express = express();
 
   app.use(express.json());
-  app.use("/", await router.create(arweave, smartweave, contract, wallet));
+  app.use(
+    "/validators",
+    await validators.create(arweave, smartweave, contract, wallet)
+  );
+  app.use(
+    "/tx",
+    await transactions.create(arweave, smartweave, contract, wallet)
+  );
 
   return app;
 }
