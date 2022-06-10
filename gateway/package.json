@@ -24,7 +24,6 @@
     "@cucumber/pretty-formatter": "^1.0.0-alpha.2",
     "@types/chai": "^4.3.1",
     "@types/commander": "^2.12.2",
-    "@types/cucumber": "^7.0.0",
     "@types/express": "^4.17.13",
     "@types/node": "^17.0.39",
     "@types/supertest": "^2.0.12",

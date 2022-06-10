@@ -8,19 +8,19 @@ Build dependencies:
 
 ```sh
 cd ../token
-npm build
+yarn build
 
 cd ../bundlers
-npm build
+yarn build
 
 cd ../validators
-npm build
+yarn build
 ```
 
 Build the gateway:
 
 ```sh
-npm build
+yarn build
 ```
 
 ## Run
@@ -28,11 +28,7 @@ npm build
 When starting the gateway, it needs a path to the wallet file and address of the `validators` contract. Defaults for the other CLI args should be OK:
 
 ```sh
-$ npm start -- -h
-
-> bundlr-contract-gateway@1.0.0 start
-> node dist/index.js "-h"
-
+$ yarn start -h
 Usage: index [options]
 
 Options:
@@ -47,11 +43,11 @@ Options:
 To start the gateway:
 
 ```sh
-$ npm start -- -c "<VALIDATORS_CONTRACT_ADDRESS>" -w /path/to/my/wallet.json
+$ yarn start -c "<VALIDATORS_CONTRACT_ADDRESS>" -w /path/to/my/wallet.json
 ```
 
 ## Run Tests
 
 ```sh
-$ npm test
+$ yarn test
 ```
