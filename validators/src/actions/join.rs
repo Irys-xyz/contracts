@@ -5,11 +5,14 @@ use bundlr_contracts_shared::{
     Address, Amount,
 };
 use serde::{Deserialize, Serialize};
+use url::Url;
 use wasm_bindgen::JsValue;
 
 use crate::{
-    action::ActionResult, contract_utils::handler_result::HandlerResult, error::ContractError,
-    state::State,
+    action::ActionResult,
+    contract_utils::handler_result::HandlerResult,
+    error::ContractError,
+    state::{State, Validator},
 };
 
 #[derive(Serialize)]
@@ -26,7 +29,7 @@ struct Result {
     result_type: String,
 }
 
-pub async fn join(mut state: State, stake: Amount) -> ActionResult {
+pub async fn join(mut state: State, stake: Amount, url: Url) -> ActionResult {
     let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
@@ -58,7 +61,14 @@ pub async fn join(mut state: State, stake: Amount) -> ActionResult {
         return Err(ContractError::TransferFailed);
     }
 
-    state.validators.insert(caller, stake);
+    state.validators.insert(
+        caller.clone(),
+        Validator {
+            address: caller,
+            stake,
+            url,
+        },
+    );
 
     Ok(HandlerResult::NewState(state))
 }

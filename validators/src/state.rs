@@ -3,11 +3,19 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use bundlr_contracts_shared::{Address, Amount, TransactionId};
+use url::Url;
 
 use crate::{
     actions::slashing::{Proposal, Voting},
     epoch::Epoch,
 };
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct Validator {
+    pub address: Address,
+    pub url: Url,
+    pub stake: Amount,
+}
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -19,7 +27,7 @@ pub struct State {
     pub minimum_stake: Amount,
     pub token: Address,
     pub max_num_nominated_validators: u8,
-    pub validators: HashMap<Address, Amount>,
+    pub validators: HashMap<Address, Validator>,
     pub nominated_validators: Vec<Address>,
     pub slash_proposal_lifetime: u16,
 

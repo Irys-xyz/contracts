@@ -24,7 +24,7 @@ pub async fn handle(current_state: State, action: Action) -> ActionResult {
         Action::BundlersContract => actions::queries::bundlers_contract(current_state),
         Action::Epoch => actions::queries::epoch(current_state),
         Action::EpochDuration => actions::queries::epoch_duration(current_state),
-        Action::Join { stake } => actions::join(current_state, stake).await,
+        Action::Join { stake, url } => actions::join(current_state, stake, url).await,
         Action::Leave => actions::leave(current_state).await,
         Action::UpdateEpoch => actions::update_epoch(current_state).await,
         Action::ProposeSlash { proposal } => {

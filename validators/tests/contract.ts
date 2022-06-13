@@ -43,7 +43,7 @@ export interface ValidatorsContract extends Contract<State> {
   epoch(): Promise<{ seq: string; tx: string; height: string }>;
   epochDuration(): Promise<number>;
   updateEpoch(): Promise<string | null>;
-  join(stake: bigint): Promise<string | null>;
+  join(stake: bigint, url: URL): Promise<string | null>;
   leave(): Promise<string | null>;
   proposeSlash(proposal: SlashProposal): Promise<string | null>;
   voteSlash(tx: string, vote: "for" | "against"): Promise<string | null>;
@@ -138,10 +138,11 @@ class ValidatorsContractImpl
       function: "updateEpoch",
     });
   }
-  async join(stake: bigint) {
+  async join(stake: bigint, url: URL) {
     return this.writeInteraction({
       function: "join",
       stake: stake.toString(),
+      url: url.toString(),
     });
   }
   async leave() {

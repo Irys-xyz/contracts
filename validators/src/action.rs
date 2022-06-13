@@ -5,6 +5,7 @@ use crate::{
 };
 use bundlr_contracts_shared::{Address, Amount, TransactionId};
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::{error::ContractError, state::State};
 
@@ -19,7 +20,7 @@ pub enum Action {
     EpochDuration,
     Bundler,
     BundlersContract,
-    Join { stake: Amount },
+    Join { stake: Amount, url: Url },
     Leave,
     UpdateEpoch,
     ProposeSlash { proposal: Proposal },
