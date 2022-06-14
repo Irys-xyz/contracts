@@ -20,7 +20,68 @@ export class State {
   slashProposals: {
     [key: string]: [SlashProposal, string, string, string, any]; // TODO: model voting data correctly
   };
+
+  constructor(data: {
+    bundler: string;
+    bundlersContract: string;
+    epoch: { seq: string; tx: string; height: string };
+    epochDuration: number;
+    minimumStake: string;
+    token: string;
+    validators: { [key: string]: string };
+    nominatedValidators: string[];
+    slashProposals: {
+      [key: string]: [SlashProposal, string, string, string, any]; // TODO: model voting data correctly
+    };
+  }) {
+    if (!data.bundler) {
+      throw Error("Invalid data, 'bundler' not defined");
+    }
+    this.bundler = data.bundler;
+
+    if (!data.bundlersContract) {
+      throw Error("Invalid data, 'bundlersContract' not defined");
+    }
+    this.bundlersContract = data.bundlersContract;
+
+    if (!data.epoch) {
+      throw Error("Invalid data, 'epoch' not defined");
+    }
+    this.epoch = data.epoch;
+
+    if (!data.epochDuration) {
+      throw Error("Invalid data, 'epochDuration' not defined");
+    }
+    this.epochDuration = data.epochDuration;
+
+    if (!data.minimumStake) {
+      throw Error("Invalid data, 'minimumStake' not defined");
+    }
+    this.minimumStake = data.minimumStake;
+
+    if (!data.token) {
+      throw Error("Invalid data, 'token' not defined");
+    }
+    this.token = data.token;
+
+    if (!data.validators) {
+      throw Error("Invalid data, 'validators' not defined");
+    }
+    this.validators = data.validators;
+
+    if (!data.nominatedValidators) {
+      throw Error("Invalid data, 'nominatedValidators' not defined");
+    }
+    this.nominatedValidators = data.nominatedValidators;
+
+    if (!data.slashProposals) {
+      throw Error("Invalid data, 'slashProposals' not defined");
+    }
+    this.slashProposals = data.slashProposals;
+  }
 }
+
+export type Vote = "for" | "against";
 
 export class SlashProposal {
   id: string;
@@ -30,6 +91,51 @@ export class SlashProposal {
   block: string;
   validator: string;
   signature: string;
+
+  constructor(data: {
+    id: string;
+    size: number;
+    fee: string;
+    currency: string;
+    block: string;
+    validator: string;
+    signature: string;
+  }) {
+    if (!data.id) {
+      throw Error("Invalid data, 'id' not defined");
+    }
+    this.id = data.id;
+
+    if (!data.size) {
+      throw Error("Invalid data, 'size' not defined");
+    }
+    this.size = data.size;
+
+    if (!data.fee) {
+      throw Error("Invalid data, 'fee' not defined");
+    }
+    this.fee = data.fee;
+
+    if (!data.currency) {
+      throw Error("Invalid data, 'currency' not defined");
+    }
+    this.currency = data.currency;
+
+    if (!data.block) {
+      throw Error("Invalid data, 'block' not defined");
+    }
+    this.block = data.block;
+
+    if (!data.validator) {
+      throw Error("Invalid data, 'validator' not defined");
+    }
+    this.validator = data.validator;
+
+    if (!data.signature) {
+      throw Error("Invalid data, 'signature' not defined");
+    }
+    this.signature = data.signature;
+  }
 }
 
 export interface ValidatorsContract extends Contract<State> {
@@ -54,7 +160,8 @@ class ValidatorsContractImpl
   implements ValidatorsContract
 {
   async currentState() {
-    return (await super.readState()).state as State;
+    let state = await super.readState().then((res) => res.state);
+    return new State(state);
   }
   async bundler() {
     const interactionResult = await this.viewState({

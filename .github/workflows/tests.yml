@@ -12,7 +12,7 @@ jobs:
         with:
           version: "latest"
       - name: Token - install
-        run: yarn
+        run: yarn install --forzen-lockfile
         working-directory: token
       - name: Token - build
         run: yarn build
@@ -21,7 +21,7 @@ jobs:
         run: yarn test
         working-directory: token
       - name: Bundlers - install
-        run: yarn
+        run: yarn install --forzen-lockfile
         working-directory: bundlers
       - name: Bundlers - build
         run: yarn build
@@ -29,3 +29,18 @@ jobs:
       - name: Bundlers - run tests
         run: yarn test
         working-directory: bundlers
+      - name: Validators - install
+        run: yarn install --forzen-lockfile
+        working-directory: validators
+      - name: Validators - build
+        run: yarn build
+        working-directory: validators
+      - name: Validators - run tests
+        run: yarn test
+        working-directory: validators
+      - name: Contract Gateway - install
+        run: yarn install --forzen-lockfile
+        working-directory: gateway
+      - name: Contract Gateway - test
+        run: yarn test
+        working-directory: gateway

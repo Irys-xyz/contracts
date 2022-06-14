@@ -8,12 +8,12 @@ import {
 } from "redstone-smartweave";
 import path from "path";
 
-export class State {
+export type State = {
   bundlers: { [key: string]: string | null };
   token: string;
   stake: string;
   withdrawDelay: number;
-}
+};
 
 export interface BundlersContract extends Contract<State> {
   currentState(): Promise<State>;
