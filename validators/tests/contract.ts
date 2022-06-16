@@ -139,7 +139,7 @@ export class SlashProposal {
 }
 
 export interface ValidatorsContract extends Contract<State> {
-  currentState(): Promise<State>;
+  currentState(height?: number): Promise<State>;
   validators(): Promise<string[]>;
   nominatedValidators(): Promise<string[]>;
   bundler(): Promise<string>;
@@ -159,8 +159,8 @@ class ValidatorsContractImpl
   extends HandlerBasedContract<State>
   implements ValidatorsContract
 {
-  async currentState() {
-    let state = await super.readState().then((res) => res.state);
+  async currentState(height?: number) {
+    let state = await super.readState(height).then((res) => res.state);
     return new State(state);
   }
   async bundler() {
