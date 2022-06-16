@@ -15,10 +15,18 @@ async function create(
 
   const router = express.Router();
 
-  router.get("/state", async (_: Request, res: Response) => {
-    return contractConnection.currentState().then((state) => {
-      res.status(200).send(state);
-    });
+  router.get("/state", async (req: Request, res: Response) => {
+    if (req.query.height) {
+      return contractConnection
+        .currentState(Number(req.query.height))
+        .then((state) => {
+          res.status(200).send(state);
+        });
+    } else {
+      return contractConnection.currentState().then((state) => {
+        res.status(200).send(state);
+      });
+    }
   });
 
   router.post("/propose", (req: Request, res: Response) => {
