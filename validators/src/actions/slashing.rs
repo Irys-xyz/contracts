@@ -12,15 +12,15 @@ use bundlr_contracts_shared::{u128_utils, Address, Amount, TransactionId};
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Proposal {
-    id: String,
-    size: usize,
+    pub id: String,
+    pub size: usize,
     #[serde(with = "u128_utils")]
-    fee: u128,
-    currency: String,
+    pub fee: u128,
+    pub currency: String,
     #[serde(with = "u128_utils")]
-    block: u128,
-    validator: String,
-    signature: String,
+    pub block: u128,
+    pub validator: String,
+    pub signature: String,
 }
 
 pub type Stake = Amount;
