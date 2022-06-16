@@ -29,6 +29,22 @@ async function create(
     }
   });
 
+  router.post("/update-epoch", (_: Request, res: Response) => {
+    try {
+      contractConnection.updateEpoch().then(
+        (result) => {
+          res.send({ status: "ok", tx: result });
+        },
+        (err) => {
+          console.error("Failed to update epoch:", err);
+          res.status(500).send("Operation failed, check logs");
+        }
+      );
+    } catch (err: any) {
+      res.status(400).send({ status: "error", msg: err.toString() });
+    }
+  });
+
   router.post("/propose", (req: Request, res: Response) => {
     try {
       // TODO: instead of validating data, pass it to the contract
@@ -37,7 +53,7 @@ async function create(
       contractConnection.proposeSlash(proposal).then(
         (result) => {
           console.log("Result: ", result);
-          res.send(`{"status": "OK"}`);
+          res.send({ status: "ok" });
         },
         (err) => {
           console.error("Failed to propose slashing:", err);
@@ -61,7 +77,7 @@ async function create(
       }
       contractConnection.voteSlash(req.body.tx, req.body.vote).then(
         () => {
-          res.send(`{"status": "OK"}`);
+          res.send({ status: "ok" });
         },
         (err) => {
           console.error("Failed to vote for slashing:", err);

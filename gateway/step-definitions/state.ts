@@ -42,7 +42,6 @@ Then(
   "validator {int} is not listed as a validator",
   async function (validator: number) {
     let receivedState = new State(this.response.body);
-    console.log(receivedState);
     expect(receivedState.validators).to.not.have.property(
       this.validators[validator - 1].address
     );
