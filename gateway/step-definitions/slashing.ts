@@ -124,12 +124,14 @@ When("posting invalid proposal data", async function () {
     .send({
       foo: "bar",
     });
+  await mineBlock(this.arweaveConnection);
 });
 
 When("posting invalid voting data", async function () {
   this.response = await supertest(this.gateway).post("/validators/vote").send({
     foo: "bar",
   });
+  await mineBlock(this.arweaveConnection);
 });
 
 Given("the validator has proposed slashing", async function () {
