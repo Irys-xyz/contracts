@@ -33,7 +33,7 @@ async function create(
     try {
       contractConnection.updateEpoch().then(
         (result) => {
-          res.json({ status: "OK", tx: result });
+          res.send({ status: "ok", tx: result });
         },
         (err) => {
           console.error("Failed to update epoch:", err);
@@ -53,7 +53,7 @@ async function create(
       contractConnection.proposeSlash(proposal).then(
         (result) => {
           console.log("Result: ", result);
-          res.send(`{"status": "OK"}`);
+          res.send({ status: "ok" });
         },
         (err) => {
           console.error("Failed to propose slashing:", err);
@@ -77,7 +77,7 @@ async function create(
       }
       contractConnection.voteSlash(req.body.tx, req.body.vote).then(
         () => {
-          res.send(`{"status": "OK"}`);
+          res.send({ status: "ok" });
         },
         (err) => {
           console.error("Failed to vote for slashing:", err);
