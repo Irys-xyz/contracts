@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import { setWorldConstructor, After, Before, World } from "@cucumber/cucumber";
 
 import arweave from "./arweave";
@@ -8,14 +11,14 @@ import {
   connect as connectTokenContract,
   deploy as deployTokenContract,
   TokenState,
-} from "../../token/tests/contract";
+} from "../../token/ts/contract";
 
 import {
   connect as connectBundlersContract,
   deploy as deployBundlersContract,
-} from "../../bundlers/tests/contract";
+} from "../../bundlers/ts/contract";
 
-import { connect, deploy, State } from "../../validators/tests/contract";
+import { connect, deploy, State } from "../../validators/ts/contract";
 
 import { addFunds, mineBlock } from "./utils";
 import { JWKInterface } from "arweave/node/lib/wallet";
@@ -71,25 +74,78 @@ class ArweaveWorld extends World {
       })
     );
 
-    [initialTokenContractState, tokenContractTxId] = await deployTokenContract(
-      smartweave,
-      accounts[0]
+    const tokenContractStateFromFile = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, "../../token/tests/data/token.json"),
+        "utf8"
+      )
     );
 
-    [, bundlersContractTxId] = await deployBundlersContract(
+    initialTokenContractState = {
+      ...tokenContractStateFromFile,
+      ...{
+        owner: accounts[0].address,
+        balances: {
+          [accounts[0].address]:
+            tokenContractStateFromFile.totalSupply.toString(),
+        },
+      },
+    };
+
+    tokenContractTxId = await deployTokenContract(
       smartweave,
-      tokenContractTxId,
-      BigInt(10) ** BigInt(initialTokenContractState.decimals),
-      accounts[0]
+      accounts[0].wallet,
+      initialTokenContractState
     );
 
-    [, contractTxId] = await deploy(
-      smartweave,
-      tokenContractTxId,
-      bundlersContractTxId,
-      BigInt(10) ** BigInt(initialTokenContractState.decimals),
-      accounts[1]
+    const initialBundlersContractStateFromFile = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, "../../bundlers/tests/data/bundlers.json"),
+        "utf8"
+      )
     );
+
+    const initialBundlersContractState = {
+      ...initialBundlersContractStateFromFile,
+      withdrawDelay: 3, // NOTE: For tests, we allow withdraw after 3 blocks
+      token: tokenContractTxId,
+      stake: (
+        BigInt(10) ** BigInt(initialTokenContractState.decimals)
+      ).toString(),
+    };
+
+    bundlersContractTxId = await deployBundlersContract(
+      smartweave,
+      accounts[0].wallet,
+      initialBundlersContractState
+    );
+
+    const stateFromFile: State = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, "../../validators/tests/data/validators.json"),
+        "utf8"
+      )
+    );
+
+    let networkInfo = await smartweave.arweave.network.getInfo();
+
+    const initialState = {
+      ...stateFromFile,
+      token: tokenContractTxId,
+      bundlersContract: bundlersContractTxId,
+      minimumStake: (
+        BigInt(10) ** BigInt(initialTokenContractState.decimals)
+      ).toString(),
+      bundler: accounts[1].address,
+      epoch: {
+        seq: "0",
+        tx: networkInfo.current,
+        height: networkInfo.height.toString(),
+      },
+      epochDuration: 3,
+    };
+
+    contractTxId = await deploy(smartweave, accounts[1].wallet, initialState);
 
     await mineBlock(this.arweaveConnection);
 
