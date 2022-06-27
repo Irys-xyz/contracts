@@ -1,23 +1,33 @@
-const fs = require("node:fs/promises");
-const http = require("node:http");
-const path = require("node:path");
-const process = require("node:process");
-const { URL } = require("node:url");
+import fs from "node:fs/promises";
+import path from "node:path";
+import { URL } from "node:url";
 
-const { Command } = require("commander");
+import { Command } from "commander";
 
-const Arweave = require("arweave");
-const { LoggerFactory, SmartWeaveNodeFactory } = require("redstone-smartweave");
+import Arweave from "arweave";
+import { JWKInterface } from "arweave/node/lib/wallet";
+import { SmartWeaveNodeFactory } from "redstone-smartweave";
 
-async function readJwk(filepath) {
+import { deploy } from "./contract";
+
+function readJwk(filepath: string): Promise<JWKInterface> {
   let f = path.resolve(process.cwd(), filepath);
   return fs.readFile(f).then((walletData) => {
     let json = JSON.parse(walletData.toString());
-    return json;
+    return json as JWKInterface;
   });
 }
 
-function defaultPort(protocol) {
+type CliArgs = {
+  gateway: string;
+  wallet: string;
+  state: string;
+  token: string;
+  bundlerAddress: string;
+  bundlersContract: string;
+};
+
+function defaultPort(protocol: string) {
   switch (protocol) {
     case "http:":
       return 80;
@@ -28,7 +38,7 @@ function defaultPort(protocol) {
   }
 }
 
-async function run(args) {
+async function run(args: CliArgs) {
   let arweaveUrl = new URL(args.gateway);
   let wallet = await readJwk(args.wallet);
 
@@ -39,12 +49,6 @@ async function run(args) {
   });
 
   let smartweave = SmartWeaveNodeFactory.memCached(arweave);
-
-  let walletAddress = await arweave.wallets.jwkToAddress(wallet);
-
-  let contractSrc = await fs.readFile(
-    path.join(__dirname, "../../pkg/rust-contract_bg.wasm")
-  );
 
   let initialState = JSON.parse(
     await fs.readFile(path.resolve(process.cwd(), args.state), "utf8")
@@ -71,24 +75,15 @@ async function run(args) {
     initialState.bundler = args.bundlerAddress;
   }
 
-  let deploymentData = {
-    wallet,
-    initState: JSON.stringify(initialState),
-    src: contractSrc,
-    wasmSrcCodeDir: path.join(__dirname, "../../src"),
-    wasmGlueCode: path.join(__dirname, "../../pkg/rust-contract.js"),
-  };
-
-  // deploying contract using the new SDK.
-  return await smartweave.createContract.deploy(deploymentData);
+  return deploy(smartweave, wallet, initialState);
 }
 
-let appVersion;
+let appVersion: string;
 
 if (process.env.npm_package_version) {
   appVersion = process.env.npm_package_version;
 } else {
-  appVersion = require("../../package.json").version;
+  appVersion = require("../package.json").version;
 }
 
 const appArgs = new Command();

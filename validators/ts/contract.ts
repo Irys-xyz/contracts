@@ -274,44 +274,21 @@ class ValidatorsContractImpl
 
 export async function deploy(
   smartweave: SmartWeave,
-  token: string,
-  bundlersContract: string,
-  stake: bigint,
-  bundler: { address: string; wallet: ArWallet }
-): Promise<[State, string]> {
+  wallet: ArWallet,
+  initialState: State
+): Promise<string> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
-  const stateFromFile: State = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "./data/validators.json"), "utf8")
-  );
-
-  let networkInfo = await smartweave.arweave.network.getInfo();
-
-  let initialState = {
-    ...stateFromFile,
-    token,
-    bundlersContract,
-    minimumStake: stake.toString(),
-    bundler: bundler.address,
-    epoch: {
-      seq: "0",
-      tx: networkInfo.current,
-      height: networkInfo.height.toString(),
-    },
-    epochDuration: 3,
-  };
 
   // deploying contract using the new SDK.
-  return smartweave.createContract
-    .deploy({
-      wallet: bundler.wallet,
-      initState: JSON.stringify(initialState),
-      src: contractSrc,
-      wasmSrcCodeDir: path.join(__dirname, "../src"),
-      wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
-    })
-    .then((txId) => [initialState, txId]);
+  return smartweave.createContract.deploy({
+    wallet: wallet,
+    initState: JSON.stringify(initialState),
+    src: contractSrc,
+    wasmSrcCodeDir: path.join(__dirname, "../src"),
+    wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
+  });
 }
 
 export async function connect(

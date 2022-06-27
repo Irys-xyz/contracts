@@ -1,6 +1,6 @@
 import { Then, When } from "@cucumber/cucumber";
 
-import { State } from "../../validators/tests/contract";
+import { State } from "../../validators/ts/contract";
 
 import supertest = require("supertest");
 import { expect } from "chai";
