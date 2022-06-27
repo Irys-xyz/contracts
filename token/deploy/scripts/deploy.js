@@ -1,61 +1,101 @@
-const fs = require('fs');
-const path = require('path');
-const { SmartWeaveNodeFactory } = require('redstone-smartweave');
-const { mineBlock } = require('./utils/mine-block');
-const { loadWallet, walletAddress } = require('./utils/load-wallet');
-const { connectArweave } = require('./utils/connect-arweave');
+const fs = require("node:fs/promises");
+const http = require("node:http");
+const path = require("node:path");
+const process = require("node:process");
+const { URL } = require("node:url");
 
-module.exports.deploy = async function (
-  host,
-  port,
-  protocol,
-  target,
-  walletJwk
-) {
-  const arweave = connectArweave(host, port, protocol);
-  const smartweave = SmartWeaveNodeFactory.memCached(arweave);
-  const wallet = await loadWallet(arweave, walletJwk, target);
-  const walletAddr = await walletAddress(arweave, wallet);
-  const contractSrc = fs.readFileSync(
-    path.join(__dirname, '../../pkg/rust-contract_bg.wasm')
+const { Command } = require("commander");
+
+const Arweave = require("arweave");
+const { LoggerFactory, SmartWeaveNodeFactory } = require("redstone-smartweave");
+
+async function readJwk(filepath) {
+  let f = path.resolve(process.cwd(), filepath);
+  return fs.readFile(f).then((walletData) => {
+    let json = JSON.parse(walletData.toString());
+    return json;
+  });
+}
+
+function defaultPort(protocol) {
+  switch (protocol) {
+    case "http:":
+      return 80;
+    case "https:":
+      return 443;
+    default:
+      throw Error(`Unsupported protocol: ${protocol}`);
+  }
+}
+
+async function run(args) {
+  let arweaveUrl = new URL(args.gateway);
+  let wallet = await readJwk(args.wallet);
+
+  let arweave = Arweave.init({
+    host: arweaveUrl.hostname,
+    port: arweaveUrl.port ? arweaveUrl.port : defaultPort(arweaveUrl.protocol),
+    protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
+  });
+
+  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+
+  let walletAddress = await arweave.wallets.jwkToAddress(wallet);
+
+  let contractSrc = await fs.readFile(
+    path.join(__dirname, "../../pkg/rust-contract_bg.wasm")
   );
+
   const stateFromFile = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../state/init-state.json'), 'utf-8')
+    await fs.readFile(path.resolve(process.cwd(), args.state), "utf8")
   );
 
-  const initialState = {
+  let initialState = {
     ...stateFromFile,
     ...{
-      owner: walletAddr,
+      owner: walletAddress,
       balances: {
-        ...stateFromFile.balances,
-        [walletAddr]: 10000000,
+        [walletAddress]: stateFromFile.totalSupply.toString(),
       },
     },
   };
-  const contractTxId = await smartweave.createContract.deploy(
-    {
-      wallet,
-      initState: JSON.stringify(initialState),
-      src: contractSrc,
-    },
-    path.join(__dirname, '../../src'),
-    path.join(__dirname, '../../pkg/rust-contract.js')
-  );
-  fs.writeFileSync(
-    path.join(__dirname, `../${target}/contract-tx-id.txt`),
-    contractTxId
+
+  let deploymentData = {
+    wallet,
+    initState: JSON.stringify(initialState),
+    src: contractSrc,
+    wasmSrcCodeDir: path.join(__dirname, "../../src"),
+    wasmGlueCode: path.join(__dirname, "../../pkg/rust-contract.js"),
+  };
+
+  // deploying contract using the new SDK.
+  return await smartweave.createContract.deploy(deploymentData);
+}
+
+let appVersion;
+
+if (process.env.npm_package_version) {
+  appVersion = process.env.npm_package_version;
+} else {
+  appVersion = require("../../package.json").version;
+}
+
+const appArgs = new Command();
+appArgs
+  .version(appVersion)
+  .requiredOption("-g, --gateway <url>", "Arweave gateway URL")
+  .requiredOption("-w, --wallet <path>", "Path to Arweave wallet file")
+  .requiredOption(
+    "-s, --state <path>",
+    "Path to JSON file defining initial state"
   );
 
-  if (target == 'testnet' || target == 'local') {
-    await mineBlock(arweave);
-  }
-
-  if (target == 'testnet') {
-    console.log(
-      `Check contract at https://sonar.redstone.tools/#/app/contract/${contractTxId}?network=testnet`
-    );
-  } else {
-    console.log('Contract tx id', contractTxId);
-  }
-};
+run(appArgs.parse(process.argv).opts())
+  .then((txId) => {
+    console.error(`Deployment done, tx=${txId}`);
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("Deployment failed: ", err);
+    process.exit(1);
+  });
