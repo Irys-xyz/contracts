@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import http from "node:http";
 import path from "node:path";
 import { URL } from "node:url";
 
@@ -8,15 +7,9 @@ import { Command } from "commander";
 
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import {
-  getTag,
-  LoggerFactory,
-  SmartWeave,
-  SmartWeaveNodeFactory,
-  SmartWeaveTags,
-} from "redstone-smartweave";
+import { SmartWeaveNodeFactory } from "redstone-smartweave";
 
-import { connect, TokenState, TokenContract } from "./contract";
+import { connect } from "./contract";
 
 function readJwk(filepath: string): Promise<JWKInterface> {
   let f = path.resolve(process.cwd(), filepath);
@@ -26,11 +19,27 @@ function readJwk(filepath: string): Promise<JWKInterface> {
   });
 }
 
+type AllowanceArgs = {
+  gateway: string;
+  contract: string;
+  wallet: null | string;
+  owner: string;
+  spender: string;
+};
+
+type ApproveArgs = {
+  gateway: string;
+  contract: string;
+  wallet: null | string;
+  spender: string;
+  amount: string;
+};
+
 type BalanceArgs = {
   gateway: string;
   contract: string;
-  address: string;
   wallet: null | string;
+  address: string;
 };
 
 type TransferArgs = {
@@ -53,8 +62,6 @@ function defaultPort(protocol: string) {
 }
 
 async function balance(args: BalanceArgs) {
-  console.log(args);
-
   let arweaveUrl = new URL(args.gateway);
 
   let wallet = await readJwk(args.wallet);
@@ -69,6 +76,44 @@ async function balance(args: BalanceArgs) {
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.balanceOf(args.address);
+
+  console.log(res);
+}
+
+async function allowance(args: AllowanceArgs) {
+  let arweaveUrl = new URL(args.gateway);
+
+  let wallet = await readJwk(args.wallet);
+
+  let arweave: Arweave = Arweave.init({
+    host: arweaveUrl.hostname,
+    port: arweaveUrl.port ? arweaveUrl.port : defaultPort(arweaveUrl.protocol),
+    protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
+  });
+
+  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+
+  let connection = await connect(smartweave, args.contract, wallet);
+  let res = await connection.allowance(args.owner, args.spender);
+
+  console.log(res);
+}
+
+async function approve(args: ApproveArgs) {
+  let arweaveUrl = new URL(args.gateway);
+
+  let wallet = await readJwk(args.wallet);
+
+  let arweave: Arweave = Arweave.init({
+    host: arweaveUrl.hostname,
+    port: arweaveUrl.port ? arweaveUrl.port : defaultPort(arweaveUrl.protocol),
+    protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
+  });
+
+  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+
+  let connection = await connect(smartweave, args.contract, wallet);
+  let res = await connection.approve(args.spender, BigInt(args.amount));
 
   console.log(res);
 }
@@ -152,6 +197,62 @@ program
   .requiredOption("-a, --amount <amount>", "Amount in winston")
   .action((opts) => {
     transfer(opts)
+      .then(() => {
+        process.exit(0);
+      })
+      .catch((err) => {
+        console.error("Application failed: ", err);
+        process.exit(1);
+      });
+  });
+
+program
+  .command("approve")
+  .option(
+    "-g, --gateway <url>",
+    "Arweave gateway URL",
+    process.env.BUNDLR_ARWEAVE
+      ? process.env.BUNDLR_ARWEAVE
+      : "https://arweave.net"
+  )
+  .requiredOption(
+    "-c, --contract <address>",
+    "Token contract address",
+    process.env.BUNDLR_TOKEN_CONTRACT
+  )
+  .requiredOption("-w, --wallet <path>", "Path to wallet file")
+  .requiredOption("-s, --spender <address>", "Transfer to")
+  .requiredOption("-a, --amount <amount>", "Amount in winston")
+  .action((opts) => {
+    approve(opts)
+      .then(() => {
+        process.exit(0);
+      })
+      .catch((err) => {
+        console.error("Application failed: ", err);
+        process.exit(1);
+      });
+  });
+
+program
+  .command("allowance")
+  .option(
+    "-g, --gateway <url>",
+    "Arweave gateway URL",
+    process.env.BUNDLR_ARWEAVE
+      ? process.env.BUNDLR_ARWEAVE
+      : "https://arweave.net"
+  )
+  .requiredOption(
+    "-c, --contract <address>",
+    "Token contract address",
+    process.env.BUNDLR_TOKEN_CONTRACT
+  )
+  .requiredOption("-w, --wallet <path>", "Path to wallet file")
+  .requiredOption("-o, --owner <address>", "Transfer to")
+  .requiredOption("-s, --spender <address>", "Transfer to")
+  .action((opts) => {
+    allowance(opts)
       .then(() => {
         process.exit(0);
       })
