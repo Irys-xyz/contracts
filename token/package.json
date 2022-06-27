@@ -8,7 +8,7 @@
   "private": false,
   "scripts": {
     "build": "wasm-pack build --target nodejs --release --out-name rust-contract",
-    "deploy": "yarn build && node deploy/scripts/deploy.js",
+    "deploy": "yarn build && ts-node ts/deploy.ts",
     "test": "jest"
   },
   "engines": {
@@ -22,6 +22,7 @@
     "arlocal": "1.1.30",
     "arweave": "^1.10.23",
     "commander": "^9.3.0",
+    "dotenv": "^16.0.1",
     "jest": "^27.5.1",
     "redstone-smartweave": "0.4.79",
     "ts-jest": "^27.1.3"

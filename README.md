@@ -40,7 +40,7 @@ In another terminal, run `yarn deploy` to deploy the contract:
 
 ```sh
 cd tokens
-yarn deploy -g http://localhost:1984 -w path/to/my/wallet.json -s deploy/state/example-state.json
+yarn deploy -g http://localhost:1984 -w path/to/my/wallet.json -s example-data/example-state.json
 ```
 
 Remember to mine a block in the node.js terminal

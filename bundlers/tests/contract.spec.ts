@@ -15,7 +15,7 @@ import {
   deploy as deployTokenContract,
   TokenContract,
   TokenState,
-} from "../../token/tests/contract";
+} from "../../token/ts/contract";
 
 import { connect, deploy, State, BundlersContract } from "./contract";
 
