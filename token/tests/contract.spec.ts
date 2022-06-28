@@ -39,7 +39,7 @@ describe("Test Token", () => {
     LoggerFactory.INST.logLevel("debug", "WASM:Rust");
     LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
 
-    warp = WarpNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build();
 
     // Create wallets, fund them and get address
     wallets = await Promise.all(

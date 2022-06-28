@@ -1554,17 +1554,18 @@ argparse@^2.0.1:
   resolved "https://registry.yarnpkg.com/argparse/-/argparse-2.0.1.tgz#246f50f3ca78a3240f6c997e8a9bd1eac49e4b38"
   integrity sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==
 
-arlocal@^1.1.38:
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.41.tgz#7ac3eaa6b76e74cd4d09bdb11bc877b970642487"
-  integrity sha512-/+Wl7xE2n23QPcsGF7aYq983+LxYR42dVjXzMPiaxe4f2RtKzzqDwP4RYGFZkvQXC+I290ED/SFLqIb5POeTaw==
+arlocal@=1.1.44:
+  version "1.1.44"
+  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.44.tgz#580c2832c4ad3574b3be59b4dc1986d3ba6a3062"
+  integrity sha512-+oDgJLHOvEamXOK3LTlma7khhgZyOrGZIvgSjsE9UbA7IFJk26teZz98cBHsmtl+q4KrPnjmQ4998NG6c+mrwA==
   dependencies:
     "@koa/cors" "^3.1.0"
     apollo-server-koa "^3.6.2"
     arbundles "^0.6.19"
-    arweave "^1.10.23"
     arweave-bundles "^1.0.3"
+    asn1.js "5.4.1"
     bignumber.js "^9.0.2"
+    bytes "^3.1.2"
     graphql "^16.2.0"
     knex "^0.95.6"
     koa "^2.13.4"
@@ -1612,7 +1613,7 @@ arweave-stream-tx@^1.1.0:
     exponential-backoff "^3.1.0"
     stream-chunker "^1.2.8"
 
-arweave@1.11.4, arweave@^1.10.13, arweave@^1.10.23, arweave@^1.10.5, arweave@^1.11.4:
+arweave@1.11.4, arweave@^1.10.13, arweave@^1.10.5, arweave@^1.11.4:
   version "1.11.4"
   resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.11.4.tgz#19e5850d3b9f655cacb0953b36a12ac6596b195c"
   integrity sha512-EPUms1OMet/VFmYMefgxIpj17PIlIZzIteiHAn0tetN+d/LRV6N9CCsrg/t22hL6yLGdGRHrYlDEdsWqjwSSYg==
@@ -1629,7 +1630,7 @@ asap@^2.0.0:
   resolved "https://registry.yarnpkg.com/asap/-/asap-2.0.6.tgz#e50347611d7e690943208bbdafebcbc2fb866d46"
   integrity sha512-BSHWgDSAiKs50o2Re8ppvp3seVHXSRM44cdSsT9FfNEUUZLOGWVCsiWaRPWM1Znn+mqZ1OfVZ3z3DWEzSp7hRA==
 
-asn1.js@^5.4.1:
+asn1.js@5.4.1, asn1.js@^5.4.1:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/asn1.js/-/asn1.js-5.4.1.tgz#11a980b84ebb91781ce35b0fdc2ee294e3783f07"
   integrity sha512-+I//4cYPccV8LdmBLiX8CYvf9Sp3vQsrqu2QNXRcrbiWvcx/UdlFiqUJJzxRQxgsZmvhXhn4cSKeSmoFjVdupA==
@@ -1897,7 +1898,7 @@ bufferutil@^4.0.1:
   dependencies:
     node-gyp-build "^4.3.0"
 
-bytes@3.1.2, bytes@^3.1.0:
+bytes@3.1.2, bytes@^3.1.0, bytes@^3.1.2:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/bytes/-/bytes-3.1.2.tgz#8b0beeb98605adf1b128fa4386403c009e0221a5"
   integrity sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==

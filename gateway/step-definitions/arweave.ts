@@ -15,7 +15,7 @@ function getConnection(): [Arweave, Warp] {
 
   LoggerFactory.INST.logLevel("error");
 
-  return [arweave, WarpNodeFactory.memCached(arweave)];
+  return [arweave, WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build()];
 }
 
 BeforeAll(async function () {

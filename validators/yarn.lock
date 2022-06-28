@@ -1139,13 +1139,6 @@
   dependencies:
     "@types/node" "*"
 
-"@types/axios@^0.14.0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@types/axios/-/axios-0.14.0.tgz#ec2300fbe7d7dddd7eb9d3abf87999964cafce46"
-  integrity sha1-7CMA++fX3d1+udOr+HmZlkyvzkY=
-  dependencies:
-    axios "*"
-
 "@types/babel__core@^7.0.0", "@types/babel__core@^7.1.14":
   version "7.1.19"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.19.tgz#7b497495b7d1b4812bdb9d02804d0576f43ee460"
@@ -1186,13 +1179,6 @@
   dependencies:
     "@types/connect" "*"
     "@types/node" "*"
-
-"@types/bs58@^4.0.1":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@types/bs58/-/bs58-4.0.1.tgz#3d51222aab067786d3bc3740a84a7f5a0effaa37"
-  integrity sha512-yfAgiWgVLjFCmRv8zAcOIHywYATEwiTVccTLnRp6UxTNavT55M9d/uhK3T03St/+8/z/wW+CRjGKUNmEqoHHCA==
-  dependencies:
-    base-x "^3.0.6"
 
 "@types/cli-color@*":
   version "2.0.2"
@@ -1361,13 +1347,6 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.2.tgz#93e25bf9ee75fe0fd80b594bc4feb0e862111b5a"
   integrity sha512-YATxVxgRqNH6nHEIsvg6k2Boc1JHI9ZbH5iWFFv/MTkchz3b1ieGDa5T0a9RznNdI0KhVbdbWSN+KWWrQZRxTw==
 
-"@types/multistream@^2.1.1":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@types/multistream/-/multistream-2.1.2.tgz#c168a7765cc33926cd93e895bd7d461c5235eca7"
-  integrity sha512-Q0LINZC7Q2HE+M7uMh2QZp54F/4wz+8Vs6IEXCmeboxb3EScvqczARXPmGjP8GrEbLf68haIUjfWuQw9/kB63w==
-  dependencies:
-    "@types/node" "*"
-
 "@types/node@*":
   version "17.0.31"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.31.tgz#a5bb84ecfa27eec5e1c802c6bbf8139bdb163a5d"
@@ -1397,13 +1376,6 @@
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.4.tgz#cd667bcfdd025213aafb7ca5915a932590acdcdc"
   integrity sha512-EEhsLsD6UsDM1yFhAvy0Cjr6VwmpMWqFBCb9w07wVugF7w9nfajxLuVmngTIpgS6svCnm6Vaw+MZhoDCKnOfsw==
-
-"@types/secp256k1@^4.0.3":
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/@types/secp256k1/-/secp256k1-4.0.3.tgz#1b8e55d8e00f08ee7220b4d59a6abe89c37a901c"
-  integrity sha512-Da66lEIFeIz9ltsdMZcpQvmrmmoqrfju8pm1BH8WbYjZSwUgCwXLb9C+9XYogwBITnbsSaMdVPb2ekf7TV+03w==
-  dependencies:
-    "@types/node" "*"
 
 "@types/serve-static@*":
   version "1.13.10"
@@ -1712,19 +1684,15 @@ apollo-server-types@^3.5.2:
   resolved "https://registry.yarnpkg.com/aproba/-/aproba-2.0.0.tgz#52520b8ae5b569215b354efc0caa3fe1e45a8adc"
   integrity sha512-lYe4Gx7QT+MKGbDsA+Z+he/Wtef0BiwDOlK/XkBrdfsh9J/jPPXbX0tE9x9cl27Tmu5gg3QUbUrQYa/y+KOHPQ==
 
-arbundles@^0.6.12:
-  version "0.6.17"
-  resolved "https://registry.yarnpkg.com/arbundles/-/arbundles-0.6.17.tgz#3aaa2a37d98ae8097206eb2672b6d0d61158c5c8"
-  integrity sha512-fDTDdeL1+yQiJMZmVvcUOk5U4PkYm+P7Gam3oLc+q+72Cowx+dvP1psxGnXV8I+omIUri5/hD27HAczwcWrNZQ==
+arbundles@^0.6.19:
+  version "0.6.19"
+  resolved "https://registry.yarnpkg.com/arbundles/-/arbundles-0.6.19.tgz#550f8835014ea7a4b4c51d6d22870db1108de99b"
+  integrity sha512-OenrPZOXuihEatKAT2R0ZtbHmkTcDV4Y0fsz28gHFeVP13cZl/eNR9UiWFCrvxA0hQIanmPYAX9tgfEmk4OJHw==
   dependencies:
     "@randlabs/myalgo-connect" "^1.1.2"
     "@solana/wallet-adapter-base" "^0.9.2"
-    "@types/axios" "^0.14.0"
-    "@types/bs58" "^4.0.1"
-    "@types/multistream" "^2.1.1"
-    "@types/secp256k1" "^4.0.3"
     algosdk "^1.13.1"
-    arweave "^1.10.18"
+    arweave "^1.11.4"
     arweave-stream-tx "^1.1.0"
     avsc "https://github.com/Bundlr-Network/avsc#csp-fixes"
     axios "^0.21.3"
@@ -1816,17 +1784,18 @@ argparse@^2.0.1:
   resolved "https://registry.yarnpkg.com/argparse/-/argparse-2.0.1.tgz#246f50f3ca78a3240f6c997e8a9bd1eac49e4b38"
   integrity sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==
 
-arlocal@1.1.30:
-  version "1.1.30"
-  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.30.tgz#8c9f0580ade2b67c91526652b21a80b8d5c38b5f"
-  integrity sha512-0YBidTuTwUXUv0UoTs8fb+1+3LrBf3B4/fyTTPhcekmhFTtmH/Rx70EwrldDDWFEMZ8VBnTtWVBCGQZTpuNKQw==
+arlocal@=1.1.44:
+  version "1.1.44"
+  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.44.tgz#580c2832c4ad3574b3be59b4dc1986d3ba6a3062"
+  integrity sha512-+oDgJLHOvEamXOK3LTlma7khhgZyOrGZIvgSjsE9UbA7IFJk26teZz98cBHsmtl+q4KrPnjmQ4998NG6c+mrwA==
   dependencies:
     "@koa/cors" "^3.1.0"
     apollo-server-koa "^3.6.2"
-    arbundles "^0.6.12"
-    arweave "^1.10.23"
+    arbundles "^0.6.19"
     arweave-bundles "^1.0.3"
+    asn1.js "5.4.1"
     bignumber.js "^9.0.2"
+    bytes "^3.1.2"
     graphql "^16.2.0"
     knex "^0.95.6"
     koa "^2.13.4"
@@ -1841,7 +1810,7 @@ arlocal@1.1.30:
     moment "^2.29.1"
     rfc4648 "^1.5.1"
     smartweave "^0.4.46"
-    sqlite3 "^5.0.2"
+    sqlite3 "^5.0.3"
     tsc-watch "^4.6.0"
 
 articles@~0.2.1:
@@ -1864,19 +1833,7 @@ arweave-stream-tx@^1.1.0:
     exponential-backoff "^3.1.0"
     stream-chunker "^1.2.8"
 
-arweave@1.10.23, arweave@^1.10.18, arweave@^1.10.5:
-  version "1.10.23"
-  resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.10.23.tgz#6edc056026d6c11ec47d817bb2c4f6d8fb8c65e5"
-  integrity sha512-lAeCopS9iNGhmJkUovWqb7R+JEF83LP8f51rG+H98JPI9KQVRJYtM5NmMMU8auDtOzvBPTZ7me1pYn/CfS3VTg==
-  dependencies:
-    arconnect "^0.2.8"
-    asn1.js "^5.4.1"
-    axios "^0.22.0"
-    base64-js "^1.3.1"
-    bignumber.js "^9.0.1"
-    util "^0.12.4"
-
-arweave@1.11.4, arweave@^1.10.13, arweave@^1.10.23:
+arweave@1.11.4, arweave@^1.10.13, arweave@^1.10.23, arweave@^1.11.4:
   version "1.11.4"
   resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.11.4.tgz#19e5850d3b9f655cacb0953b36a12ac6596b195c"
   integrity sha512-EPUms1OMet/VFmYMefgxIpj17PIlIZzIteiHAn0tetN+d/LRV6N9CCsrg/t22hL6yLGdGRHrYlDEdsWqjwSSYg==
@@ -1888,7 +1845,19 @@ arweave@1.11.4, arweave@^1.10.13, arweave@^1.10.23:
     bignumber.js "^9.0.2"
     util "^0.12.4"
 
-asn1.js@^5.4.1:
+arweave@^1.10.5:
+  version "1.10.23"
+  resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.10.23.tgz#6edc056026d6c11ec47d817bb2c4f6d8fb8c65e5"
+  integrity sha512-lAeCopS9iNGhmJkUovWqb7R+JEF83LP8f51rG+H98JPI9KQVRJYtM5NmMMU8auDtOzvBPTZ7me1pYn/CfS3VTg==
+  dependencies:
+    arconnect "^0.2.8"
+    asn1.js "^5.4.1"
+    axios "^0.22.0"
+    base64-js "^1.3.1"
+    bignumber.js "^9.0.1"
+    util "^0.12.4"
+
+asn1.js@5.4.1, asn1.js@^5.4.1:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/asn1.js/-/asn1.js-5.4.1.tgz#11a980b84ebb91781ce35b0fdc2ee294e3783f07"
   integrity sha512-+I//4cYPccV8LdmBLiX8CYvf9Sp3vQsrqu2QNXRcrbiWvcx/UdlFiqUJJzxRQxgsZmvhXhn4cSKeSmoFjVdupA==
@@ -1924,14 +1893,6 @@ available-typed-arrays@^1.0.5:
   version "5.4.7"
   resolved "https://github.com/Bundlr-Network/avsc#a730cc8018b79e114b6a3381bbb57760a24c6cef"
 
-axios@*, axios@^0.27.2:
-  version "0.27.2"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.27.2.tgz#207658cc8621606e586c85db4b41a750e756d972"
-  integrity sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==
-  dependencies:
-    follow-redirects "^1.14.9"
-    form-data "^4.0.0"
-
 axios@^0.21.3:
   version "0.21.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
@@ -1945,6 +1906,14 @@ axios@^0.22.0:
   integrity sha512-Z0U3uhqQeg1oNcihswf4ZD57O3NrR1+ZXhxaROaWpDmsDTx7T2HNBV2ulBtie2hwJptu8UvgnJoK+BIqdzh/1w==
   dependencies:
     follow-redirects "^1.14.4"
+
+axios@^0.27.2:
+  version "0.27.2"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.27.2.tgz#207658cc8621606e586c85db4b41a750e756d972"
+  integrity sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==
+  dependencies:
+    follow-redirects "^1.14.9"
+    form-data "^4.0.0"
 
 babel-jest@^27.5.1:
   version "27.5.1"
@@ -2012,7 +1981,7 @@ balanced-match@^1.0.0:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
 
-base-x@^3.0.2, base-x@^3.0.6:
+base-x@^3.0.2:
   version "3.0.9"
   resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.9.tgz#6349aaabb58526332de9f60995e548a53fe21320"
   integrity sha512-H7JU6iBHTal1gp56aKoaa//YUxEaAOUiydvrV/pILqIHXTtqxSkATOnDA2u+jZ/61sD+L/412+7kzXRtWukhpQ==
@@ -2194,7 +2163,7 @@ bufferutil@^4.0.1:
   dependencies:
     node-gyp-build "^4.3.0"
 
-bytes@3.1.2, bytes@^3.1.0:
+bytes@3.1.2, bytes@^3.1.0, bytes@^3.1.2:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/bytes/-/bytes-3.1.2.tgz#8b0beeb98605adf1b128fa4386403c009e0221a5"
   integrity sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==
@@ -5427,26 +5396,6 @@ redstone-isomorphic@1.1.6, redstone-isomorphic@^1.1.0:
     safe-buffer "^5.1.2"
     undici "^4.16.0"
 
-redstone-smartweave@0.4.79:
-  version "0.4.79"
-  resolved "https://registry.yarnpkg.com/redstone-smartweave/-/redstone-smartweave-0.4.79.tgz#1bda811649fbec5aea17a673ad9383bbd9df6a21"
-  integrity sha512-Cd7LXUDjO00rBq5miynolYf7l83lgMio4XC1hqpsxOyLYmtsrQGkao2QlIi0RyFy/MV/zAEUL4YsXlA5XZANSg==
-  dependencies:
-    "@assemblyscript/loader" "^0.19.23"
-    archiver "^5.3.0"
-    arweave "1.10.23"
-    bignumber.js "^9.0.1"
-    fast-copy "^2.1.1"
-    knex "^0.95.14"
-    lodash "^4.17.21"
-    redstone-isomorphic "1.1.6"
-    redstone-wasm-metering "1.0.0"
-    safe-stable-stringify "2.3.1"
-    stream-buffers "^3.0.2"
-    tslog "^3.2.2"
-    unzipit "^1.4.0"
-    vm2 "3.9.9"
-
 redstone-wasm-json-toolkit@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/redstone-wasm-json-toolkit/-/redstone-wasm-json-toolkit-1.0.0.tgz#e7f0bf39c4566d445769ac6626351ce2512b61cb"
@@ -5776,10 +5725,10 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
 
-sqlite3@^5.0.2:
-  version "5.0.6"
-  resolved "https://registry.yarnpkg.com/sqlite3/-/sqlite3-5.0.6.tgz#1b50a36e528fe650f79da9ed7adde6468d597aa9"
-  integrity sha512-uT1dC6N3ReF+jchY01zvl1wVFFJ5xO86wSnCpK39uA/zmAHBDm6TiAq1v876QKv8JgiijxQ7/fb5C2LPm7ZAJA==
+sqlite3@^5.0.3:
+  version "5.0.8"
+  resolved "https://registry.yarnpkg.com/sqlite3/-/sqlite3-5.0.8.tgz#b4b7eab7156debec80866ef492e01165b4688272"
+  integrity sha512-f2ACsbSyb2D1qFFcqIXPfFscLtPVOWJr5GmUzYxf4W+0qelu5MWrR+FAQE1d5IUArEltBrzSDxDORG8P/IkqyQ==
   dependencies:
     "@mapbox/node-pre-gyp" "^1.0.0"
     node-addon-api "^4.2.0"

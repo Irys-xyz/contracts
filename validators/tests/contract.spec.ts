@@ -67,7 +67,7 @@ describe("Bundlers Contract", () => {
     LoggerFactory.INST.logLevel("debug", "WASM:Rust");
     LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
 
-    warp = WarpNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build();
 
     // Create accounts, fund them and get address
     accounts = await Promise.all(
