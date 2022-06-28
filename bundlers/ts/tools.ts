@@ -7,9 +7,8 @@ import { Command } from "commander";
 
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { SmartWeaveNodeFactory } from "redstone-smartweave";
-
 import { connect } from "./contract";
+import { WarpNodeFactory } from "warp-contracts";
 
 function readJwk(filepath: string): Promise<JWKInterface> {
   let f = path.resolve(process.cwd(), filepath);
@@ -66,7 +65,7 @@ async function join(args: JoinArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.join();
@@ -85,7 +84,7 @@ async function allow(args: AllowArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.addAllowedInteractor(args.address);
@@ -104,7 +103,7 @@ async function getAllowed(args: GetAllowedArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.allowedInteractors();
@@ -123,7 +122,7 @@ async function getBundlers(args: GetBundlersArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.bundlers();

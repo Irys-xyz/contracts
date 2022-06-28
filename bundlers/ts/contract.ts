@@ -1,12 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-
-import {
-  ArWallet,
-  Contract,
-  HandlerBasedContract,
-  SmartWeave,
-} from "redstone-smartweave";
+import { ArWallet, Contract, HandlerBasedContract, Warp } from "warp-contracts";
 
 export type State = {
   bundlers: { [key: string]: string | null };
@@ -117,31 +111,32 @@ class BundlersContractImpl
 }
 
 export async function deploy(
-  smartweave: SmartWeave,
+  warp: Warp,
   wallet: ArWallet,
-  initialState: State
+  initialState: State,
+  useBundler: boolean = false,
 ): Promise<string> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
   // deploying contract using the new SDK.
-  return smartweave.createContract.deploy({
+  return warp.createContract.deploy({
     wallet,
     initState: JSON.stringify(initialState),
     src: contractSrc,
     wasmSrcCodeDir: path.join(__dirname, "../src"),
     wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
-  });
+  }, useBundler);
 }
 
 export async function connect(
-  smartweave: SmartWeave,
+  warp: Warp,
   contractTxId: string,
   wallet: ArWallet
 ): Promise<BundlersContract> {
   let contract = new BundlersContractImpl(
     contractTxId,
-    smartweave
+    warp
   ).setEvaluationOptions({
     internalWrites: true,
   }) as BundlersContract;

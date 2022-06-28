@@ -7,9 +7,9 @@ import { Command } from "commander";
 
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { SmartWeaveNodeFactory } from "redstone-smartweave";
 
 import { connect } from "./contract";
+import { WarpNodeFactory } from "warp-contracts";
 
 function readJwk(filepath: string): Promise<JWKInterface> {
   let f = path.resolve(process.cwd(), filepath);
@@ -72,7 +72,7 @@ async function balance(args: BalanceArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.balanceOf(args.address);
@@ -91,7 +91,7 @@ async function allowance(args: AllowanceArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.allowance(args.owner, args.spender);
@@ -110,7 +110,7 @@ async function approve(args: ApproveArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.approve(args.spender, BigInt(args.amount));
@@ -129,7 +129,7 @@ async function transfer(args: TransferArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.transfer(args.recipient, BigInt(args.amount));

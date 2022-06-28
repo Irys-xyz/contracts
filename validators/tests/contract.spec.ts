@@ -4,13 +4,6 @@ import path from "node:path";
 import ArLocal from "arlocal";
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import {
-  getTag,
-  LoggerFactory,
-  SmartWeave,
-  SmartWeaveNodeFactory,
-  SmartWeaveTags,
-} from "redstone-smartweave";
 
 import {
   connect as connectTokenContract,
@@ -34,6 +27,7 @@ import {
   State,
   ValidatorsContract,
 } from "../ts/contract";
+import { getTag, LoggerFactory, SmartWeaveTags, Warp, WarpNodeFactory } from "warp-contracts";
 
 jest.setTimeout(30000);
 
@@ -46,7 +40,7 @@ describe("Bundlers Contract", () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let connections: {
     token: TokenContract;
     bundlers: BundlersContract;
@@ -73,7 +67,7 @@ describe("Bundlers Contract", () => {
     LoggerFactory.INST.logLevel("debug", "WASM:Rust");
     LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
 
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCached(arweave);
 
     // Create accounts, fund them and get address
     accounts = await Promise.all(
@@ -107,7 +101,7 @@ describe("Bundlers Contract", () => {
     };
 
     tokenContractTxId = await deployTokenContract(
-      smartweave,
+      warp,
       accounts[0].wallet,
       initialTokenContractState
     );
@@ -129,7 +123,7 @@ describe("Bundlers Contract", () => {
     };
 
     bundlersContractTxId = await deployBundlersContract(
-      smartweave,
+      warp,
       accounts[0].wallet,
       initialBundlersContractState
     );
@@ -138,7 +132,7 @@ describe("Bundlers Contract", () => {
       fs.readFileSync(path.join(__dirname, "./data/validators.json"), "utf8")
     );
 
-    let networkInfo = await smartweave.arweave.network.getInfo();
+    let networkInfo = await warp.arweave.network.getInfo();
 
     initialState = {
       ...stateFromFile,
@@ -156,7 +150,7 @@ describe("Bundlers Contract", () => {
       epochDuration: 3,
     };
 
-    contractTxId = await deploy(smartweave, accounts[1].wallet, initialState);
+    contractTxId = await deploy(warp, accounts[1].wallet, initialState);
     await mineBlock(arweave);
 
     console.log(`Token Contract TX ID: ${tokenContractTxId}`);
@@ -166,13 +160,13 @@ describe("Bundlers Contract", () => {
     connections = await Promise.all(
       accounts.map(async (account) => {
         return Promise.all([
-          connectTokenContract(smartweave, tokenContractTxId, account.wallet),
+          connectTokenContract(warp, tokenContractTxId, account.wallet),
           connectBundlersContract(
-            smartweave,
+            warp,
             bundlersContractTxId,
             account.wallet
           ),
-          connect(smartweave, contractTxId, account.wallet),
+          connect(warp, contractTxId, account.wallet),
         ]).then(([token, bundlers, validators]) => {
           return { token, bundlers, validators };
         });

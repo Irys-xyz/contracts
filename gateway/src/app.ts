@@ -1,14 +1,15 @@
 import express, { Express, Request, Response } from "express";
 
 import Arweave from "arweave";
-import { ArWallet, SmartWeave } from "redstone-smartweave";
 
 import validators from "./validators";
 import transactions from "./transactions";
 
+import { ArWallet, Warp } from "warp-contracts";
+
 async function create(
   arweave: Arweave,
-  smartweave: SmartWeave,
+  warp: Warp,
   contract: string,
   wallet: ArWallet
 ) {
@@ -17,11 +18,11 @@ async function create(
   app.use(express.json());
   app.use(
     "/validators",
-    await validators.create(arweave, smartweave, contract, wallet)
+    await validators.create(arweave, warp, contract, wallet)
   );
   app.use(
     "/tx",
-    await transactions.create(arweave, smartweave, contract, wallet)
+    await transactions.create(arweave, warp, contract, wallet)
   );
 
   return app;

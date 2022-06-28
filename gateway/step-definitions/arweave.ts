@@ -1,16 +1,12 @@
 import { AfterAll, BeforeAll } from "@cucumber/cucumber";
 
 import ArLocal from "arlocal";
-import Arweave = require("arweave");
-import {
-  LoggerFactory,
-  SmartWeave,
-  SmartWeaveNodeFactory,
-} from "redstone-smartweave";
+import Arweave from "arweave";
+import { LoggerFactory, Warp, WarpNodeFactory } from "warp-contracts";
 
 let connection: ArLocal;
 
-function getConnection(): [Arweave, SmartWeave] {
+function getConnection(): [Arweave, Warp] {
   const arweave = Arweave.init({
     host: "localhost",
     port: 1820,
@@ -19,7 +15,7 @@ function getConnection(): [Arweave, SmartWeave] {
 
   LoggerFactory.INST.logLevel("error");
 
-  return [arweave, SmartWeaveNodeFactory.memCached(arweave)];
+  return [arweave, WarpNodeFactory.memCached(arweave)];
 }
 
 BeforeAll(async function () {

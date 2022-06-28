@@ -7,8 +7,7 @@ import { Command } from "commander";
 
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { SmartWeaveNodeFactory } from "redstone-smartweave";
-
+import { WarpNodeFactory } from "warp-contracts";
 import { connect } from "./contract";
 
 function readJwk(filepath: string): Promise<JWKInterface> {
@@ -56,7 +55,7 @@ async function join(args: JoinArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.join(BigInt(args.stake), validatorUrl);
@@ -75,7 +74,7 @@ async function getValidators(args: GetValidatorsArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let smartweave = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(smartweave, args.contract, wallet);
   let res = await connection.validators();

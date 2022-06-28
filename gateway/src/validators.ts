@@ -1,17 +1,17 @@
 import express, { Request, Response } from "express";
 
 import Arweave from "arweave";
-import { ArWallet, SmartWeave } from "redstone-smartweave";
 
 import { connect, SlashProposal, Vote } from "../../validators/ts/contract";
+import { ArWallet, Warp } from "warp-contracts";
 
 async function create(
   arweave: Arweave,
-  smartweave: SmartWeave,
+  warp: Warp,
   contract: string,
   wallet: ArWallet
 ) {
-  let contractConnection = await connect(smartweave, contract, wallet);
+  let contractConnection = await connect(warp, contract, wallet);
 
   const router = express.Router();
 

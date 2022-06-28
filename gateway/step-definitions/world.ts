@@ -4,8 +4,7 @@ import path from "node:path";
 import { setWorldConstructor, After, Before, World } from "@cucumber/cucumber";
 
 import arweave from "./arweave";
-import Arweave = require("arweave");
-import { ArWallet, SmartWeave } from "redstone-smartweave";
+import Arweave from "arweave";
 
 import {
   connect as connectTokenContract,
@@ -25,10 +24,11 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 
 import { Express } from "express";
 import app from "../src/app";
+import { ArWallet, Warp } from "warp-contracts";
 
 class ArweaveWorld extends World {
   arweaveConnection: Arweave;
-  smartWeaveConnection: SmartWeave;
+  warpConnection: Warp;
   gateway: Express | null;
   contractTxId: string | null;
   validators: { address: string; wallet: ArWallet; url: URL }[];
@@ -38,7 +38,7 @@ class ArweaveWorld extends World {
 
   constructor(options: any) {
     super(options);
-    [this.arweaveConnection, this.smartWeaveConnection] =
+    [this.arweaveConnection, this.warpConnection] =
       arweave.getConnection();
     this.gateway = null;
     this.contractTxId = null;
@@ -55,7 +55,7 @@ class ArweaveWorld extends World {
     let bundlersContractTxId: string;
     let tokenContractTxId: string;
 
-    const smartweave: SmartWeave = this.smartWeaveConnection;
+    const warp: Warp = this.warpConnection;
 
     let accounts = await Promise.all(
       [1, 2, 3, 4].map(async (_) => {
@@ -93,7 +93,7 @@ class ArweaveWorld extends World {
     };
 
     tokenContractTxId = await deployTokenContract(
-      smartweave,
+      warp,
       accounts[0].wallet,
       initialTokenContractState
     );
@@ -115,7 +115,7 @@ class ArweaveWorld extends World {
     };
 
     bundlersContractTxId = await deployBundlersContract(
-      smartweave,
+      warp,
       accounts[0].wallet,
       initialBundlersContractState
     );
@@ -127,7 +127,7 @@ class ArweaveWorld extends World {
       )
     );
 
-    let networkInfo = await smartweave.arweave.network.getInfo();
+    let networkInfo = await warp.arweave.network.getInfo();
 
     const initialState = {
       ...stateFromFile,
@@ -145,16 +145,16 @@ class ArweaveWorld extends World {
       epochDuration: 3,
     };
 
-    contractTxId = await deploy(smartweave, accounts[1].wallet, initialState);
+    contractTxId = await deploy(warp, accounts[1].wallet, initialState);
 
     await mineBlock(this.arweaveConnection);
 
     let [tokenOwner, bundler, validator1, validator2] = await Promise.all(
       accounts.map(async ({ address, wallet }) => {
         return Promise.all([
-          connectTokenContract(smartweave, tokenContractTxId, wallet),
-          connectBundlersContract(smartweave, bundlersContractTxId, wallet),
-          connect(smartweave, contractTxId, wallet),
+          connectTokenContract(warp, tokenContractTxId, wallet),
+          connectBundlersContract(warp, bundlersContractTxId, wallet),
+          connect(warp, contractTxId, wallet),
         ]).then(([token, bundlers, validators]) => {
           return { address, wallet, token, bundlers, validators };
         });
@@ -186,7 +186,7 @@ class ArweaveWorld extends World {
 
     this.gateway = await app.create(
       this.arweaveConnection,
-      this.smartWeaveConnection,
+      this.warpConnection,
       contractTxId,
       validator1.wallet
     );
