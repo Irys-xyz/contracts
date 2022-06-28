@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import Arweave from "arweave";
 import { ArWallet, SmartWeave } from "redstone-smartweave";
 
-import { connect, SlashProposal, Vote } from "../../validators/tests/contract";
+import { connect, SlashProposal, Vote } from "../../validators/ts/contract";
 
 async function create(
   arweave: Arweave,

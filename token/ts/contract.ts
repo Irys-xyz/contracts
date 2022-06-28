@@ -1,4 +1,5 @@
-import fs from "fs";
+import fs from "node:fs";
+import path from "node:path";
 
 import {
   ArWallet,
@@ -6,7 +7,6 @@ import {
   HandlerBasedContract,
   SmartWeave,
 } from "redstone-smartweave";
-import path from "path";
 
 export type TokenState = {
   ticker: string;
@@ -200,35 +200,21 @@ class TokenContractImpl
 
 export function deploy(
   smartweave: SmartWeave,
-  owner: { address: string; wallet: ArWallet }
-): Promise<[TokenState, string]> {
+  wallet: ArWallet,
+  initialState: TokenState
+): Promise<string> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
-  const stateFromFile = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "./data/token.json"), "utf8")
-  );
-
-  let initialState = {
-    ...stateFromFile,
-    ...{
-      owner: owner.address,
-      balances: {
-        [owner.address]: stateFromFile.totalSupply.toString(),
-      },
-    },
-  };
 
   // deploying contract using the new SDK.
-  return smartweave.createContract
-    .deploy({
-      wallet: owner.wallet,
-      initState: JSON.stringify(initialState),
-      src: contractSrc,
-      wasmSrcCodeDir: path.join(__dirname, "../src"),
-      wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
-    })
-    .then((txId) => [initialState, txId]);
+  return smartweave.createContract.deploy({
+    wallet,
+    initState: JSON.stringify(initialState),
+    src: contractSrc,
+    wasmSrcCodeDir: path.join(__dirname, "../src"),
+    wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
+  });
 }
 
 export async function connect(

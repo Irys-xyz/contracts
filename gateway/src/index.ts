@@ -103,7 +103,7 @@ let appVersion;
 if (process.env.npm_package_version) {
   appVersion = process.env.npm_package_version;
 } else {
-  throw Error("Could not determine the app version");
+  appVersion = require("../package.json").version;
 }
 
 dotenv.config();

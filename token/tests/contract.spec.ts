@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import ArLocal from "arlocal";
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
@@ -8,9 +11,9 @@ import {
   SmartWeaveNodeFactory,
   SmartWeaveTags,
 } from "redstone-smartweave";
-import { addFunds, mineBlock } from "../utils";
 
-import { deploy, connect, TokenState, TokenContract } from "./contract";
+import { addFunds, mineBlock } from "../ts/utils";
+import { deploy, connect, TokenState, TokenContract } from "../ts/contract";
 
 jest.setTimeout(30000);
 
@@ -57,7 +60,21 @@ describe("Test Token", () => {
       })
     );
 
-    [initialState, contractTxId] = await deploy(smartweave, wallets[0]);
+    const stateFromFile = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "./data/token.json"), "utf8")
+    );
+
+    initialState = {
+      ...stateFromFile,
+      ...{
+        owner: wallets[0].address,
+        balances: {
+          [wallets[0].address]: stateFromFile.totalSupply.toString(),
+        },
+      },
+    };
+
+    contractTxId = await deploy(smartweave, wallets[0].wallet, initialState);
 
     console.log(`TokenContract TX ID: ${contractTxId}`);
 

@@ -1,4 +1,5 @@
-import fs from "fs";
+import fs from "node:fs";
+import path from "node:path";
 
 import {
   ArWallet,
@@ -6,7 +7,6 @@ import {
   HandlerBasedContract,
   SmartWeave,
 } from "redstone-smartweave";
-import path from "path";
 
 export type State = {
   bundlers: { [key: string]: string | null };
@@ -118,34 +118,20 @@ class BundlersContractImpl
 
 export async function deploy(
   smartweave: SmartWeave,
-  token: string,
-  stake: bigint,
-  owner: { wallet: ArWallet; address: string }
-): Promise<[State, string]> {
+  wallet: ArWallet,
+  initialState: State
+): Promise<string> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
-  const stateFromFile = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "./data/bundlers.json"), "utf8")
-  );
-
-  let initialState = {
-    ...stateFromFile,
-    withdrawDelay: 3, // NOTE: For tests, we allow withdraw after 3 blocks
-    token,
-    stake: stake.toString(),
-  };
-
   // deploying contract using the new SDK.
-  return smartweave.createContract
-    .deploy({
-      wallet: owner.wallet,
-      initState: JSON.stringify(initialState),
-      src: contractSrc,
-      wasmSrcCodeDir: path.join(__dirname, "../src"),
-      wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
-    })
-    .then((txId) => [initialState, txId]);
+  return smartweave.createContract.deploy({
+    wallet,
+    initState: JSON.stringify(initialState),
+    src: contractSrc,
+    wasmSrcCodeDir: path.join(__dirname, "../src"),
+    wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
+  });
 }
 
 export async function connect(

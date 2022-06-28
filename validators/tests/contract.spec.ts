@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import ArLocal from "arlocal";
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
@@ -8,29 +11,29 @@ import {
   SmartWeaveNodeFactory,
   SmartWeaveTags,
 } from "redstone-smartweave";
-import { addFunds, mineBlock } from "../utils";
 
 import {
   connect as connectTokenContract,
   deploy as deployTokenContract,
   TokenContract,
   TokenState,
-} from "../../token/tests/contract";
+} from "../../token/ts/contract";
 
 import {
   connect as connectBundlersContract,
   deploy as deployBundlersContract,
   BundlersContract,
   State as BundlersState,
-} from "../../bundlers/tests/contract";
+} from "../../bundlers/ts/contract";
 
+import { addFunds, mineBlock } from "../ts/utils";
 import {
   connect,
   deploy,
   SlashProposal,
   State,
   ValidatorsContract,
-} from "./contract";
+} from "../ts/contract";
 
 jest.setTimeout(30000);
 
@@ -85,24 +88,75 @@ describe("Bundlers Contract", () => {
       })
     );
 
-    [initialTokenContractState, tokenContractTxId] = await deployTokenContract(
-      smartweave,
-      accounts[0]
+    const tokenContractStateFromFile = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, "../../token/tests/data/token.json"),
+        "utf8"
+      )
     );
-    [initialBundlersContractState, bundlersContractTxId] =
-      await deployBundlersContract(
-        smartweave,
-        tokenContractTxId,
-        BigInt(10) ** BigInt(initialTokenContractState.decimals),
-        accounts[0]
-      );
-    [initialState, contractTxId] = await deploy(
+
+    initialTokenContractState = {
+      ...tokenContractStateFromFile,
+      ...{
+        owner: accounts[0].address,
+        balances: {
+          [accounts[0].address]:
+            tokenContractStateFromFile.totalSupply.toString(),
+        },
+      },
+    };
+
+    tokenContractTxId = await deployTokenContract(
       smartweave,
-      tokenContractTxId,
-      bundlersContractTxId,
-      BigInt(10) ** BigInt(initialTokenContractState.decimals),
-      accounts[1]
+      accounts[0].wallet,
+      initialTokenContractState
     );
+
+    const initialBundlersContractStateFromFile = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, "../../bundlers/tests/data/bundlers.json"),
+        "utf8"
+      )
+    );
+
+    initialBundlersContractState = {
+      ...initialBundlersContractStateFromFile,
+      withdrawDelay: 3, // NOTE: For tests, we allow withdraw after 3 blocks
+      token: tokenContractTxId,
+      stake: (
+        BigInt(10) ** BigInt(initialTokenContractState.decimals)
+      ).toString(),
+    };
+
+    bundlersContractTxId = await deployBundlersContract(
+      smartweave,
+      accounts[0].wallet,
+      initialBundlersContractState
+    );
+
+    const stateFromFile: State = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "./data/validators.json"), "utf8")
+    );
+
+    let networkInfo = await smartweave.arweave.network.getInfo();
+
+    initialState = {
+      ...stateFromFile,
+      token: tokenContractTxId,
+      bundlersContract: bundlersContractTxId,
+      minimumStake: (
+        BigInt(10) ** BigInt(initialTokenContractState.decimals)
+      ).toString(),
+      bundler: accounts[1].address,
+      epoch: {
+        seq: "0",
+        tx: networkInfo.current,
+        height: networkInfo.height.toString(),
+      },
+      epochDuration: 3,
+    };
+
+    contractTxId = await deploy(smartweave, accounts[1].wallet, initialState);
     await mineBlock(arweave);
 
     console.log(`Token Contract TX ID: ${tokenContractTxId}`);
