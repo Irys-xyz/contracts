@@ -72,9 +72,9 @@ async function balance(args: BalanceArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.memCached(arweave);
 
-  let connection = await connect(smartweave, args.contract, wallet);
+  let connection = await connect(warp, args.contract, wallet);
   let res = await connection.balanceOf(args.address);
 
   console.log(res);
@@ -91,9 +91,9 @@ async function allowance(args: AllowanceArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.memCached(arweave);
 
-  let connection = await connect(smartweave, args.contract, wallet);
+  let connection = await connect(warp, args.contract, wallet);
   let res = await connection.allowance(args.owner, args.spender);
 
   console.log(res);
@@ -110,9 +110,9 @@ async function approve(args: ApproveArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.memCached(arweave);
 
-  let connection = await connect(smartweave, args.contract, wallet);
+  let connection = await connect(warp, args.contract, wallet);
   let res = await connection.approve(args.spender, BigInt(args.amount));
 
   console.log(res);
@@ -129,9 +129,9 @@ async function transfer(args: TransferArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.memCached(arweave);
 
-  let connection = await connect(smartweave, args.contract, wallet);
+  let connection = await connect(warp, args.contract, wallet);
   let res = await connection.transfer(args.recipient, BigInt(args.amount));
 
   console.log(res);
