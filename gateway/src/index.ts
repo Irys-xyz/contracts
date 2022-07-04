@@ -62,11 +62,11 @@ async function run(args: CliArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.memCached(arweave);
 
   let appInstance = await app.create(
     arweave,
-    smartweave,
+    warp,
     args.contract,
     wallet
   );

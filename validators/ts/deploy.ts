@@ -48,7 +48,7 @@ async function run(args: CliArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.memCached(arweave);
 
   let initialState = JSON.parse(
     await fs.readFile(path.resolve(process.cwd(), args.state), "utf8")
@@ -75,7 +75,7 @@ async function run(args: CliArgs) {
     initialState.bundler = args.bundlerAddress;
   }
 
-  return deploy(smartweave, wallet, initialState, true);
+  return deploy(warp, wallet, initialState, true);
 }
 
 let appVersion: string;
@@ -104,7 +104,7 @@ appArgs
 
 run(appArgs.parse(process.argv).opts())
   .then((txId) => {
-    console.error(`Deployment done, tx=${txId}`);
+    console.error(`Deployment done, ${txId}`);
     process.exit(0);
   })
   .catch((err) => {

@@ -55,9 +55,9 @@ async function join(args: JoinArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.memCached(arweave);
 
-  let connection = await connect(smartweave, args.contract, wallet);
+  let connection = await connect(warp, args.contract, wallet);
   let res = await connection.join(BigInt(args.stake), validatorUrl);
 
   console.log(res);
@@ -74,9 +74,9 @@ async function getValidators(args: GetValidatorsArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.memCached(arweave);
 
-  let connection = await connect(smartweave, args.contract, wallet);
+  let connection = await connect(warp, args.contract, wallet);
   let res = await connection.validators();
 
   console.log(res);

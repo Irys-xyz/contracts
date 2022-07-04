@@ -82,9 +82,14 @@ class TokenContractImpl
   extends HandlerBasedContract<TokenState>
   implements TokenContract
 {
+  constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
+    super(_contractTxId, warp);
+  }
+
   async currentState() {
     return (await super.readState()).state;
   }
+
   async name() {
     const interactionResult = await this.viewState({
       function: "name",
@@ -94,6 +99,7 @@ class TokenContractImpl
     }
     return interactionResult.result as string;
   }
+
   async symbol() {
     const interactionResult = await this.viewState({
       function: "symbol",
@@ -103,6 +109,7 @@ class TokenContractImpl
     }
     return interactionResult.result as string;
   }
+
   async decimals() {
     const interactionResult = await this.viewState({
       function: "decimals",
@@ -112,6 +119,7 @@ class TokenContractImpl
     }
     return interactionResult.result as number;
   }
+
   async totalSupply() {
     const interactionResult = await this.viewState({
       function: "totalSupply",
@@ -121,6 +129,7 @@ class TokenContractImpl
     }
     return BigInt(interactionResult.result as string);
   }
+
   async balanceOf(target: string): Promise<Balance> {
     const interactionResult = await this.viewState({
       function: "balanceOf",
@@ -137,41 +146,47 @@ class TokenContractImpl
       }
     );
   }
+
   async burn(amount: bigint) {
-    return await this.writeInteraction({
+    return await this.write({
       function: "burn",
       amount: amount.toString(),
     });
   }
+
   async burnFrom(from: string, amount: BigInt) {
-    return await this.writeInteraction({
+    return await this.write({
       function: "burnFrom",
       from,
       amount: amount.toString(),
     });
   }
+
   async transfer(to: string, value: bigint) {
-    return await this.writeInteraction({
+    return await this.write({
       function: "transfer",
       to,
       amount: value.toString(),
     });
   }
+
   async transferFrom(from: string, to: string, value: BigInt) {
-    return await this.writeInteraction({
+    return await this.write({
       function: "transferFrom",
       from,
       to,
       amount: value.toString(),
     });
   }
+
   async approve(spender: string, value: BigInt) {
-    return await this.writeInteraction({
+    return await this.write({
       function: "approve",
       spender,
       amount: value.toString(),
     });
   }
+  
   async allowance(owner: string, spender: string) {
     const interactionResult = await this.viewState({
       function: "allowance",
@@ -189,6 +204,10 @@ class TokenContractImpl
         spender: string;
       }
     );
+  }
+
+  write(input: any,): Promise<string | null> {
+    return this._mainnet ? this.bundleInteraction(input) : this.writeInteraction(input);
   }
 }
 
@@ -213,13 +232,14 @@ export function deploy(
 }
 
 export async function connect(
-  smartweave: Warp,
+  warp: Warp,
   contractTxId: string,
   wallet: ArWallet
 ): Promise<TokenContract> {
   let contract = new TokenContractImpl(
     contractTxId,
-    smartweave
+    warp,
+    warp.useWarpGwInfo // We assume that if we're using the Warp gateway then we're on mainnet
   ).setEvaluationOptions({
     internalWrites: true,
   }) as TokenContract;

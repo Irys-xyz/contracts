@@ -159,10 +159,15 @@ class ValidatorsContractImpl
   extends HandlerBasedContract<State>
   implements ValidatorsContract
 {
+  constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
+    super(_contractTxId, warp);
+  }
+
   async currentState(height?: number) {
     let state = await super.readState(height).then((res) => res.state);
     return new State(state);
   }
+
   async bundler() {
     const interactionResult = await this.viewState({
       function: "bundler",
@@ -172,6 +177,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string;
   }
+
   async bundlersContract() {
     const interactionResult = await this.viewState({
       function: "bundlerContract",
@@ -181,6 +187,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string;
   }
+
   async token() {
     const interactionResult = await this.viewState({
       function: "token",
@@ -190,6 +197,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string;
   }
+
   async minimumStake() {
     const interactionResult = await this.viewState({
       function: "minimumStake",
@@ -199,6 +207,7 @@ class ValidatorsContractImpl
     }
     return BigInt(interactionResult.result as string);
   }
+
   async epoch() {
     const interactionResult = await this.viewState({
       function: "epoch",
@@ -213,6 +222,7 @@ class ValidatorsContractImpl
       height: string;
     };
   }
+
   async epochDuration() {
     const interactionResult = await this.viewState({
       function: "epochDuration",
@@ -222,6 +232,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as number;
   }
+
   async validators() {
     const interactionResult = await this.viewState({
       function: "validators",
@@ -231,6 +242,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string[];
   }
+
   async nominatedValidators() {
     const interactionResult = await this.viewState({
       function: "nominatedValidators",
@@ -240,35 +252,44 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string[];
   }
+
   async updateEpoch() {
-    return this.writeInteraction({
+    return this.write({
       function: "updateEpoch",
     });
   }
+
   async join(stake: bigint, url: URL) {
-    return this.writeInteraction({
+    return this.write({
       function: "join",
       stake: stake.toString(),
       url: url.toString(),
     });
   }
+
   async leave() {
-    return this.writeInteraction({
+    return this.write({
       function: "leave",
     });
   }
+
   async proposeSlash(proposal: SlashProposal) {
-    return this.writeInteraction({
+    return this.write({
       function: "proposeSlash",
       proposal,
     });
   }
+
   async voteSlash(tx: string, vote: "for" | "against") {
-    return this.writeInteraction({
+    return this.write({
       function: "voteSlash",
       tx,
       vote,
     });
+  }
+
+  write(input: any,): Promise<string | null> {
+    return this._mainnet ? this.bundleInteraction(input) : this.writeInteraction(input);
   }
 }
 
@@ -299,7 +320,8 @@ export async function connect(
 ): Promise<ValidatorsContract> {
   let contract = new ValidatorsContractImpl(
     contractTxId,
-    warp
+    warp,
+    warp.useWarpGwInfo // We assume that if we're using the Warp gateway then we're on mainnet
   ).setEvaluationOptions({
     internalWrites: true,
   }) as ValidatorsContract;

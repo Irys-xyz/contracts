@@ -28,9 +28,14 @@ class BundlersContractImpl
   extends HandlerBasedContract<State>
   implements BundlersContract
 {
+  constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
+    super(_contractTxId, warp);
+  }
+
   async currentState() {
     return (await super.readState()).state as State;
   }
+
   async token() {
     const interactionResult = await this.viewState({
       function: "token",
@@ -40,6 +45,7 @@ class BundlersContractImpl
     }
     return interactionResult.result as string;
   }
+
   async stake() {
     const interactionResult = await this.viewState({
       function: "stake",
@@ -49,6 +55,7 @@ class BundlersContractImpl
     }
     return BigInt(interactionResult.result as string);
   }
+
   async bundlers() {
     const interactionResult = await this.viewState({
       function: "bundlers",
@@ -58,6 +65,7 @@ class BundlersContractImpl
     }
     return interactionResult.result as { [key: string]: string };
   }
+
   async allowedInteractors() {
     const interactionResult = await this.viewState({
       function: "allowedInteractors",
@@ -67,6 +75,7 @@ class BundlersContractImpl
     }
     return interactionResult.result as Set<string>;
   }
+
   async withdrawDelay() {
     const interactionResult = await this.viewState({
       function: "withdrawDelay",
@@ -76,37 +85,49 @@ class BundlersContractImpl
     }
     return interactionResult.result as number;
   }
+
   async join() {
-    return this.writeInteraction({
+    return this.write({
       function: "join",
     });
   }
+
   async leave() {
-    return this.writeInteraction({
+    return this.write({
       function: "leave",
     });
   }
+
   async withdraw() {
-    return this.writeInteraction({
+    return this.write({
       function: "withdraw",
     });
   }
+
   async syncSlash() {
-    return this.writeInteraction({
+    return this.write({
       function: "syncSlash",
     });
   }
+
   async addAllowedInteractor(address: string) {
-    return this.writeInteraction({
+    return this.write({
       function: "addAllowedInteractor",
       interactor: address,
     });
   }
+
   async removeAllowedInteractor(address: string) {
-    return this.writeInteraction({
+    return this.write({
       function: "removeAllowedInteractor",
       interactor: address,
     });
+  }
+
+  write(input: any,): Promise<string | null> {
+    console.log(this._mainnet);
+    
+    return this._mainnet ? this.bundleInteraction(input).then(r => r.originalTxId) : this.writeInteraction(input);
   }
 }
 
@@ -136,7 +157,8 @@ export async function connect(
 ): Promise<BundlersContract> {
   let contract = new BundlersContractImpl(
     contractTxId,
-    warp
+    warp,
+    warp.useWarpGwInfo // We assume that if we're using the Warp gateway then we're on mainnet
   ).setEvaluationOptions({
     internalWrites: true,
   }) as BundlersContract;

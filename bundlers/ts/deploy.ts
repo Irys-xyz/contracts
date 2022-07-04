@@ -91,7 +91,7 @@ appArgs
 
 run(appArgs.parse(process.argv).opts())
   .then((txId) => {
-    console.error(`Deployment done, tx=${txId}`);
+    console.error(`Deployment done, ${txId}`);
     process.exit(0);
   })
   .catch((err) => {
