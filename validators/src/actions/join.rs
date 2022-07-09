@@ -15,6 +15,8 @@ use crate::{
     state::{State, Validator},
 };
 
+use crate::contract_utils::js_imports::log;
+
 #[derive(Serialize)]
 struct Input {
     function: String,
@@ -30,11 +32,19 @@ struct Result {
 }
 
 pub async fn join(mut state: State, stake: Amount, url: Url) -> ActionResult {
+    log(&format!(
+        "[validatorJoin] state {:?} stake {:?} url {:?}",
+        state, stake, url
+    ));
     let caller = SmartWeave::caller()
         .parse::<Address>()
         .map_err(|err| ContractError::ParseError(err.to_string()))?;
 
     if stake < state.minimum_stake {
+        log(&format!(
+            "[validatorJoin] invalid stake: state {:?} stake {:?}",
+            state, stake
+        ));
         return Err(ContractError::InvalidStake);
     }
 
@@ -58,6 +68,11 @@ pub async fn join(mut state: State, stake: Amount, url: Url) -> ActionResult {
     let result: Result = result.into_serde().unwrap();
 
     if result.result_type != "ok" {
+        log(&format!(
+            "[validatorJoin] transferFrom call failed from {:?} amount {:?}",
+            caller.clone(),
+            stake
+        ));
         return Err(ContractError::TransferFailed);
     }
 
@@ -70,5 +85,7 @@ pub async fn join(mut state: State, stake: Amount, url: Url) -> ActionResult {
         },
     );
 
-    Ok(HandlerResult::NewState(state))
+    let new_state = HandlerResult::NewState(state);
+    log(&format!("[validatorJoin] state {:?}", new_state));
+    Ok(new_state)
 }

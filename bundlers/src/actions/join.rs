@@ -8,7 +8,9 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    action::ActionResult, contract_utils::{handler_result::HandlerResult, js_imports::log}, error::ContractError,
+    action::ActionResult,
+    contract_utils::{handler_result::HandlerResult, js_imports::log},
+    error::ContractError,
     state::State,
 };
 
@@ -52,11 +54,12 @@ pub async fn join(mut state: State) -> ActionResult {
     )
     .await;
 
-    log(&format!("{:?}", result));
+    log(&format!("[bundlersJoin] foreign call {:?}", result));
 
     let result: Result = result.into_serde().unwrap();
 
     if result.result_type != "ok" {
+        log("[bundlersJoin] foreign call failed");
         return Err(ContractError::TransferFailed);
     }
 

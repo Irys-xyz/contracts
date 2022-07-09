@@ -86,25 +86,45 @@ pub(super) fn spend_allowance(
         .allowances
         .get_mut(&owner)
         .ok_or_else(|| {
-            log(&format!("NO OWNER owner {:?} spender {:?} amount {:?}", owner.clone(), spender.clone(), amount.clone()));
+            log(&format!(
+                "NO OWNER owner {:?} spender {:?} amount {:?}",
+                owner.clone(),
+                spender.clone(),
+                amount.clone()
+            ));
             ContractError::InvalidSpenderAllowance {
-            owner: owner.clone(),
-            spender: spender.clone(),
-            amount: amount.clone(),
-        }})?
+                owner: owner.clone(),
+                spender: spender.clone(),
+                amount: amount.clone(),
+            }
+        })?
         .get_mut(&spender)
         .ok_or_else(|| {
-            log(&format!(" NO SPENDER owner {:?} spender {:?} amount {:?}", owner.clone(), spender.clone(), amount.clone()));
+            log(&format!(
+                " NO SPENDER owner {:?} spender {:?} amount {:?}",
+                owner.clone(),
+                spender.clone(),
+                amount.clone()
+            ));
             ContractError::InvalidSpenderAllowance {
-            owner: owner.clone(),
-            spender: spender.clone(),
-            amount: amount.clone(),
-        }
+                owner: owner.clone(),
+                spender: spender.clone(),
+                amount: amount.clone(),
+            }
         })?;
 
     if *allowance < *amount {
-        log(&format!("transferFrom] Not enough spender balance. Expected >={:?} Got {:?}", *amount, *allowance));
-        log(&format!("NOT ENOUGH ALLOWANCE owner {:?} spender {:?} amount {:?} got {:?}", owner.clone(), spender.clone(), amount.clone(), allowance.clone()));
+        log(&format!(
+            "transferFrom] Not enough spender balance. Expected >={:?} Got {:?}",
+            *amount, *allowance
+        ));
+        log(&format!(
+            "NOT ENOUGH ALLOWANCE owner {:?} spender {:?} amount {:?} got {:?}",
+            owner.clone(),
+            spender.clone(),
+            amount.clone(),
+            allowance.clone()
+        ));
         Err(ContractError::InvalidSpenderAllowance {
             owner: owner.clone(),
             spender: spender.clone(),
@@ -123,6 +143,7 @@ pub(super) fn spend_allowance(
                 state.allowances.remove(&owner);
             }
         }
+        log(&format!("[spendAllowance] state {:?}", state));
         Ok(state)
     }
 }

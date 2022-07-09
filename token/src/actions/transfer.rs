@@ -29,7 +29,11 @@ pub fn transfer(mut state: State, to: Address, amount: Amount) -> ActionResult {
     let target_balance = *balances.get(&to).unwrap_or(&Amount::ZERO);
     balances.insert(to, target_balance + amount);
 
-    Ok(HandlerResult::NewState(state))
+    let new_state = HandlerResult::NewState(state);
+
+    log(&format!("[transfer] state {:?}", new_state));
+
+    Ok(new_state)
 }
 
 pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -> ActionResult {
@@ -38,12 +42,10 @@ pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -
         return Err(ContractError::AmountMustBeHigherThanZero);
     }
 
-    let caller = SmartWeave::caller()
-        .parse::<Address>()
-        .map_err(|err| {
-            log(&format!("[transferFrom] Failed to parse address - {}", err));
-            ContractError::ParseError(err.to_string())
-        })?;
+    let caller = SmartWeave::caller().parse::<Address>().map_err(|err| {
+        log(&format!("[transferFrom] Failed to parse address - {}", err));
+        ContractError::ParseError(err.to_string())
+    })?;
 
     // If caller is using this function for transferring tokens,
     // no need to check or change allowances.
@@ -58,7 +60,10 @@ pub fn transfer_from(state: State, from: Address, to: Address, amount: Amount) -
     // Checking if caller has enough funds
     let from_balance = *balances.get(&from).unwrap_or(&Amount::ZERO);
     if from_balance < amount {
-        log(&format!("transferFrom] Not enough balance. Expected >={:?} Got {:?}", amount, from_balance));
+        log(&format!(
+            "transferFrom] Not enough balance. Expected >={:?} Got {:?}",
+            amount, from_balance
+        ));
         return Err(ContractError::InvalidBalance(from_balance));
     }
 
