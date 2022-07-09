@@ -13,3 +13,4 @@ pkg/
 contracts-registry.address.test.txt
 wallets/
 cache/
+.devcontainer
