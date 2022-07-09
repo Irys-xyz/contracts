@@ -6,12 +6,12 @@
     "tx": "",
     "height": "0"
   },
-  "epochDuration": 500,
+  "epochDuration": 30,
   "minimumStake": "250000000000000",
   "token": "JV1AViSVEi8VEshP5sEyv_TZWVw8Ye8oGjIxuIvARbA",
-  "maxNumNominatedValidators": 10,
+  "maxNumNominatedValidators": 3,
   "validators": {},
   "nominatedValidators": [],
-  "slashProposalLifetime": 500,
+  "slashProposalLifetime": 30,
   "slashProposals": {}
 }

@@ -6,7 +6,7 @@ import { Command } from "commander";
 
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { WarpNodeFactory } from "warp-contracts";
+import { LoggerFactory, WarpNodeFactory } from "warp-contracts";
 
 import { deploy } from "./contract";
 
@@ -37,6 +37,10 @@ function defaultPort(protocol: string) {
       throw Error(`Unsupported protocol: ${protocol}`);
   }
 }
+
+LoggerFactory.INST.logLevel("trace");
+LoggerFactory.INST.logLevel("trace", "WASM:Rust");
+LoggerFactory.INST.logLevel("trace", "WasmContractHandlerApi");
 
 async function run(args: CliArgs) {
   let arweaveUrl = new URL(args.gateway);
@@ -104,7 +108,7 @@ appArgs
 
 run(appArgs.parse(process.argv).opts())
   .then((txId) => {
-    console.error(`Deployment done, ${txId}`);
+    console.error(`Deployment done, ${JSON.stringify(txId)}`);
     process.exit(0);
   })
   .catch((err) => {

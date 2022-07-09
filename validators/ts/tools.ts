@@ -77,9 +77,9 @@ async function getValidators(args: GetValidatorsArgs) {
   let warp = WarpNodeFactory.memCached(arweave);
 
   let connection = await connect(warp, args.contract, wallet);
-  let res = await connection.validators();
+  let res = await connection.readState();
 
-  console.log(res);
+  console.log(JSON.stringify(res));
 }
 
 let appVersion: string;

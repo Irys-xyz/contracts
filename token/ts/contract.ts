@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ArWallet, Contract, HandlerBasedContract, Warp } from "warp-contracts";
+import { ArWallet, BundleInteractionResponse, Contract, ContractDeploy, HandlerBasedContract, Warp } from "warp-contracts";
 
 export type TokenState = {
   ticker: string;
@@ -71,17 +71,16 @@ export interface TokenContract extends Contract<TokenState> {
   symbol(): Promise<string>;
   totalSupply(): Promise<bigint>;
 
-  approve(spender: string, value: bigint): Promise<string | null>;
-  burn(amount: bigint): Promise<string | null>;
-  burnFrom(from: string, amount: bigint): Promise<string | null>;
-  transfer(to: string, value: bigint): Promise<string | null>;
-  transferFrom(from: string, to: string, value: bigint): Promise<string | null>;
+  approve(spender: string, value: bigint): Promise<string | BundleInteractionResponse>;
+  burn(amount: bigint): Promise<string | BundleInteractionResponse>;
+  burnFrom(from: string, amount: bigint): Promise<string | BundleInteractionResponse>;
+  transfer(to: string, value: bigint): Promise<string | BundleInteractionResponse>;
+  transferFrom(from: string, to: string, value: bigint): Promise<string | BundleInteractionResponse>;
 }
 
 class TokenContractImpl
   extends HandlerBasedContract<TokenState>
-  implements TokenContract
-{
+  implements TokenContract {
   constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
     super(_contractTxId, warp);
   }
@@ -186,7 +185,7 @@ class TokenContractImpl
       amount: value.toString(),
     });
   }
-  
+
   async allowance(owner: string, spender: string) {
     const interactionResult = await this.viewState({
       function: "allowance",
@@ -206,8 +205,8 @@ class TokenContractImpl
     );
   }
 
-  write(input: any,): Promise<string | null> {
-    return this._mainnet ? this.bundleInteraction(input) : this.writeInteraction(input);
+  write(input: any,): Promise<string | BundleInteractionResponse> {
+    return this._mainnet ? this.bundleInteraction(input) as Promise<BundleInteractionResponse> : this.writeInteraction(input) as Promise<string>;
   }
 }
 
@@ -216,7 +215,7 @@ export function deploy(
   wallet: ArWallet,
   initialState: TokenState,
   useBundler: boolean = false
-): Promise<string> {
+): Promise<ContractDeploy> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );

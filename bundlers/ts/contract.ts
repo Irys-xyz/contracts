@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ArWallet, Contract, HandlerBasedContract, Warp } from "warp-contracts";
+import { ArWallet, Contract, ContractDeploy, HandlerBasedContract, Warp } from "warp-contracts";
 
 export type State = {
   bundlers: { [key: string]: string | null };
@@ -26,8 +26,7 @@ export interface BundlersContract extends Contract<State> {
 
 class BundlersContractImpl
   extends HandlerBasedContract<State>
-  implements BundlersContract
-{
+  implements BundlersContract {
   constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
     super(_contractTxId, warp);
   }
@@ -125,8 +124,6 @@ class BundlersContractImpl
   }
 
   write(input: any,): Promise<string | null> {
-    console.log(this._mainnet);
-    
     return this._mainnet ? this.bundleInteraction(input).then(r => r.originalTxId) : this.writeInteraction(input);
   }
 }
@@ -136,7 +133,7 @@ export async function deploy(
   wallet: ArWallet,
   initialState: State,
   useBundler: boolean = false,
-): Promise<string> {
+): Promise<ContractDeploy> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
