@@ -11,6 +11,7 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 import { WarpNodeFactory } from "warp-contracts";
 
 import app from "./app";
+import path from "node:path";
 
 function readJwk(path: string): Promise<JWKInterface> {
   return fs.readFile(path).then((walletData) => {
@@ -102,7 +103,7 @@ let appVersion;
 if (process.env.npm_package_version) {
   appVersion = process.env.npm_package_version;
 } else {
-  appVersion = require("../package.json").version;
+  appVersion = require("../../../package.json").version;
 }
 
 dotenv.config();
