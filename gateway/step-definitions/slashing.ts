@@ -1,6 +1,6 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 
-import supertest = require("supertest");
+import supertest from "supertest";
 import { expect } from "chai";
 
 import { mineBlock } from "./utils";
@@ -60,6 +60,8 @@ Given("validator {int} is joined", async function (validator: number) {
 
   await this.validators[i].validators.join(stake, this.validators[i].url);
   await mineBlock(this.arweaveConnection);
+
+  console.debug(await this.validators[i].validators.validators());
 
   expect(await this.validators[i].validators.validators()).to.contain(
     this.validators[i].address

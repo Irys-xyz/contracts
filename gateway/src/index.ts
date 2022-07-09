@@ -8,7 +8,7 @@ import { Command } from "commander";
 
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { SmartWeaveNodeFactory } from "redstone-smartweave";
+import { WarpNodeFactory } from "warp-contracts";
 
 import app from "./app";
 
@@ -62,18 +62,17 @@ async function run(args: CliArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let smartweave = SmartWeaveNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.fileCached(arweave, "cache");
 
   let appInstance = await app.create(
     arweave,
-    smartweave,
+    warp,
     args.contract,
     wallet
   );
 
   console.log(
-    `Validator wallet: path=${
-      args.wallet
+    `Validator wallet: path=${args.wallet
     }, address=${await arweave.wallets.getAddress(wallet)}`
   );
 

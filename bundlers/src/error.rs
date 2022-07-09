@@ -3,6 +3,7 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub enum ContractError {
+    AlreadyJoined(Address),
     AlreadyLeaving(Address, BlockHeight),
     AlreadyInteractor(Address),
     Forbidden,

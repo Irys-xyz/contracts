@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsValue;
 
 use crate::{
-    action::ActionResult, contract_utils::handler_result::HandlerResult, error::ContractError,
+    action::ActionResult, contract_utils::{handler_result::HandlerResult, js_imports::log}, error::ContractError,
     state::State,
 };
 
@@ -35,6 +35,10 @@ pub async fn join(mut state: State) -> ActionResult {
         return Err(ContractError::Forbidden);
     }
 
+    if state.bundlers.contains_key(&caller) {
+        return Err(ContractError::AlreadyJoined(caller));
+    }
+
     let result = SmartWeave::write(
         &state.token.to_string(),
         JsValue::from_serde(&Input {
@@ -47,6 +51,8 @@ pub async fn join(mut state: State) -> ActionResult {
         .unwrap(),
     )
     .await;
+
+    log(&format!("{:?}", result));
 
     let result: Result = result.into_serde().unwrap();
 

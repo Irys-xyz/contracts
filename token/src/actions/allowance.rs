@@ -4,6 +4,7 @@ use bundlr_contracts_shared::{contract_utils::js_imports::SmartWeave, Address, A
 
 use crate::action::{ActionResult, QueryResponseMsg};
 use crate::contract_utils::handler_result::HandlerResult;
+use crate::contract_utils::js_imports::log;
 use crate::error::ContractError;
 use crate::state::State;
 
@@ -84,19 +85,26 @@ pub(super) fn spend_allowance(
     let allowance = state
         .allowances
         .get_mut(&owner)
-        .ok_or_else(|| ContractError::InvalidSpenderAllowance {
+        .ok_or_else(|| {
+            log(&format!("NO OWNER owner {:?} spender {:?} amount {:?}", owner.clone(), spender.clone(), amount.clone()));
+            ContractError::InvalidSpenderAllowance {
             owner: owner.clone(),
             spender: spender.clone(),
             amount: amount.clone(),
-        })?
+        }})?
         .get_mut(&spender)
-        .ok_or_else(|| ContractError::InvalidSpenderAllowance {
+        .ok_or_else(|| {
+            log(&format!(" NO SPENDER owner {:?} spender {:?} amount {:?}", owner.clone(), spender.clone(), amount.clone()));
+            ContractError::InvalidSpenderAllowance {
             owner: owner.clone(),
             spender: spender.clone(),
             amount: amount.clone(),
+        }
         })?;
 
     if *allowance < *amount {
+        log(&format!("transferFrom] Not enough spender balance. Expected >={:?} Got {:?}", *amount, *allowance));
+        log(&format!("NOT ENOUGH ALLOWANCE owner {:?} spender {:?} amount {:?} got {:?}", owner.clone(), spender.clone(), amount.clone(), allowance.clone()));
         Err(ContractError::InvalidSpenderAllowance {
             owner: owner.clone(),
             spender: spender.clone(),
@@ -107,6 +115,7 @@ pub(super) fn spend_allowance(
 
         // If the remaining allowances is zero, cleanup
         if *allowance == Amount::ZERO {
+            log("transferFrom] Actual allowance is zero");
             // We can safely unwrap here
             let owner_allowances = state.allowances.get_mut(&owner).unwrap();
             owner_allowances.remove(&spender).unwrap();

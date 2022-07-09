@@ -7,6 +7,9 @@ __tests__/*.json
 .idea
 .yalc
 yalc.lock
-
+.history/
+pkg/
 # so that each developer won't overwrite their own local contract address
 contracts-registry.address.test.txt
+wallets/
+cache/

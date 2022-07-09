@@ -15,16 +15,16 @@
     "node": ">=16.5"
   },
   "dependencies": {
-    "typescript": "^4.6.2"
+    "typescript": "^4.6.2",
+    "warp-contracts": "^1.1.5"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",
-    "arlocal": "1.1.30",
+    "arlocal": "=1.1.44",
     "arweave": "^1.10.23",
     "commander": "^9.3.0",
     "dotenv": "^16.0.1",
     "jest": "^27.5.1",
-    "redstone-smartweave": "0.4.79",
     "ts-jest": "^27.1.3"
   }
 }

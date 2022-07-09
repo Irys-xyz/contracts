@@ -7,10 +7,10 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 import {
   getTag,
   LoggerFactory,
-  SmartWeave,
-  SmartWeaveNodeFactory,
+  Warp,
+  WarpNodeFactory,
   SmartWeaveTags,
-} from "redstone-smartweave";
+} from "warp-contracts";
 
 import {
   connect as connectTokenContract,
@@ -32,7 +32,7 @@ describe("Bundlers Contract", () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let connections: { token: TokenContract; bundlers: BundlersContract }[];
 
   let contractTxId: string;
@@ -54,7 +54,7 @@ describe("Bundlers Contract", () => {
     LoggerFactory.INST.logLevel("debug", "WASM:Rust");
     LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
 
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build();
 
     // Create accounts, fund them and get address
     accounts = await Promise.all(
@@ -88,7 +88,7 @@ describe("Bundlers Contract", () => {
     };
 
     tokenContractTxId = await deployTokenContract(
-      smartweave,
+      warp,
       accounts[0].wallet,
       initialTokenContractState
     );
@@ -106,7 +106,7 @@ describe("Bundlers Contract", () => {
       ).toString(),
     };
 
-    contractTxId = await deploy(smartweave, accounts[0].wallet, initialState);
+    contractTxId = await deploy(warp, accounts[0].wallet, initialState);
     await mineBlock(arweave);
 
     console.log(`Contract TX ID: ${contractTxId}`);
@@ -115,8 +115,8 @@ describe("Bundlers Contract", () => {
     connections = await Promise.all(
       accounts.map(async (account) => {
         let [token, bundlers] = await Promise.all([
-          connectTokenContract(smartweave, tokenContractTxId, account.wallet),
-          connect(smartweave, contractTxId, account.wallet),
+          connectTokenContract(warp, tokenContractTxId, account.wallet),
+          connect(warp, contractTxId, account.wallet),
         ]);
         token.connect(account.wallet);
         bundlers.connect(account.wallet);

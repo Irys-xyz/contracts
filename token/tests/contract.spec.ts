@@ -4,16 +4,10 @@ import path from "node:path";
 import ArLocal from "arlocal";
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import {
-  getTag,
-  LoggerFactory,
-  SmartWeave,
-  SmartWeaveNodeFactory,
-  SmartWeaveTags,
-} from "redstone-smartweave";
 
 import { addFunds, mineBlock } from "../ts/utils";
 import { deploy, connect, TokenState, TokenContract } from "../ts/contract";
+import { getTag, LoggerFactory, SmartWeaveTags, Warp, WarpNodeFactory } from "warp-contracts";
 
 jest.setTimeout(30000);
 
@@ -24,7 +18,7 @@ describe("Test Token", () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let connections: TokenContract[];
 
   let contractTxId: string;
@@ -45,7 +39,7 @@ describe("Test Token", () => {
     LoggerFactory.INST.logLevel("debug", "WASM:Rust");
     LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
 
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build();
 
     // Create wallets, fund them and get address
     wallets = await Promise.all(
@@ -74,13 +68,13 @@ describe("Test Token", () => {
       },
     };
 
-    contractTxId = await deploy(smartweave, wallets[0].wallet, initialState);
+    contractTxId = await deploy(warp, wallets[0].wallet, initialState);
 
     console.log(`TokenContract TX ID: ${contractTxId}`);
 
     connections = await Promise.all(
       wallets.map(({ wallet }) => {
-        return connect(smartweave, contractTxId, wallet);
+        return connect(warp, contractTxId, wallet);
       })
     );
 

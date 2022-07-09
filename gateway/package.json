@@ -1,4 +1,4 @@
- {
+{
   "name": "bundlr-contract-gateway",
   "version": "1.0.0",
   "description": "",
@@ -13,11 +13,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "arweave": "1.10.23",
+    "arweave": "1.11.4",
     "commander": "^9.3.0",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
-    "redstone-smartweave": "0.4.79"
+    "warp-contracts": "^1.1.5"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^8.2.2",
@@ -29,7 +29,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
-    "arlocal": "^1.1.38",
+    "arlocal": "=1.1.44",
     "chai": "^4.3.6",
     "concurrently": "^7.2.1",
     "eslint": "^8.16.0",

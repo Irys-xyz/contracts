@@ -4,8 +4,8 @@ import {
   ArWallet,
   Contract,
   HandlerBasedContract,
-  SmartWeave,
-} from "redstone-smartweave";
+  Warp,
+} from "warp-contracts";
 import path from "path";
 
 export class State {
@@ -159,10 +159,15 @@ class ValidatorsContractImpl
   extends HandlerBasedContract<State>
   implements ValidatorsContract
 {
+  constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
+    super(_contractTxId, warp);
+  }
+
   async currentState(height?: number) {
     let state = await super.readState(height).then((res) => res.state);
     return new State(state);
   }
+
   async bundler() {
     const interactionResult = await this.viewState({
       function: "bundler",
@@ -172,6 +177,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string;
   }
+
   async bundlersContract() {
     const interactionResult = await this.viewState({
       function: "bundlerContract",
@@ -181,6 +187,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string;
   }
+
   async token() {
     const interactionResult = await this.viewState({
       function: "token",
@@ -190,6 +197,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string;
   }
+
   async minimumStake() {
     const interactionResult = await this.viewState({
       function: "minimumStake",
@@ -199,6 +207,7 @@ class ValidatorsContractImpl
     }
     return BigInt(interactionResult.result as string);
   }
+
   async epoch() {
     const interactionResult = await this.viewState({
       function: "epoch",
@@ -213,6 +222,7 @@ class ValidatorsContractImpl
       height: string;
     };
   }
+
   async epochDuration() {
     const interactionResult = await this.viewState({
       function: "epochDuration",
@@ -222,6 +232,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as number;
   }
+
   async validators() {
     const interactionResult = await this.viewState({
       function: "validators",
@@ -231,6 +242,7 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string[];
   }
+
   async nominatedValidators() {
     const interactionResult = await this.viewState({
       function: "nominatedValidators",
@@ -240,65 +252,76 @@ class ValidatorsContractImpl
     }
     return interactionResult.result as string[];
   }
+
   async updateEpoch() {
-    return this.writeInteraction({
+    return this.write({
       function: "updateEpoch",
     });
   }
+
   async join(stake: bigint, url: URL) {
-    return this.writeInteraction({
+    return this.write({
       function: "join",
       stake: stake.toString(),
       url: url.toString(),
     });
   }
+
   async leave() {
-    return this.writeInteraction({
+    return this.write({
       function: "leave",
     });
   }
+
   async proposeSlash(proposal: SlashProposal) {
-    return this.writeInteraction({
+    return this.write({
       function: "proposeSlash",
       proposal,
     });
   }
+
   async voteSlash(tx: string, vote: "for" | "against") {
-    return this.writeInteraction({
+    return this.write({
       function: "voteSlash",
       tx,
       vote,
     });
   }
+
+  write(input: any,): Promise<string | null> {
+    return this._mainnet ? this.bundleInteraction(input) : this.writeInteraction(input);
+  }
 }
 
 export async function deploy(
-  smartweave: SmartWeave,
+  warp: Warp,
   wallet: ArWallet,
-  initialState: State
+  initialState: State,
+  useBundler: boolean = false
 ): Promise<string> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
 
   // deploying contract using the new SDK.
-  return smartweave.createContract.deploy({
+  return warp.createContract.deploy({
     wallet: wallet,
     initState: JSON.stringify(initialState),
     src: contractSrc,
     wasmSrcCodeDir: path.join(__dirname, "../src"),
     wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
-  });
+  }, useBundler);
 }
 
 export async function connect(
-  smartweave: SmartWeave,
+  warp: Warp,
   contractTxId: string,
   wallet: ArWallet
 ): Promise<ValidatorsContract> {
   let contract = new ValidatorsContractImpl(
     contractTxId,
-    smartweave
+    warp,
+    warp.useWarpGwInfo // We assume that if we're using the Warp gateway then we're on mainnet
   ).setEvaluationOptions({
     internalWrites: true,
   }) as ValidatorsContract;
