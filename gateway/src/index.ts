@@ -124,7 +124,7 @@ appArgs
   .requiredOption(
     "-w, --wallet",
     "Path to Arweave wallet file",
-    process.env.GW_WALLET
+    process.env.GW_WALLET ?? "./wallet.json"
   );
 
 run(appArgs.parse(process.argv).opts())
