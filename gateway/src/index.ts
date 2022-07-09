@@ -62,7 +62,7 @@ async function run(args: CliArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let warp = WarpNodeFactory.memCached(arweave);
+  let warp = WarpNodeFactory.fileCached(arweave, "cache");
 
   let appInstance = await app.create(
     arweave,
@@ -72,8 +72,7 @@ async function run(args: CliArgs) {
   );
 
   console.log(
-    `Validator wallet: path=${
-      args.wallet
+    `Validator wallet: path=${args.wallet
     }, address=${await arweave.wallets.getAddress(wallet)}`
   );
 
