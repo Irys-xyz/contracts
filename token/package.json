@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "typescript": "^4.6.2",
-    "warp-contracts": "^1.1.5"
+    "warp-contracts": "^1.1.8"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",

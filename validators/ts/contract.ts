@@ -2,7 +2,9 @@ import fs from "fs";
 
 import {
   ArWallet,
+  BundleInteractionResponse,
   Contract,
+  ContractDeploy,
   HandlerBasedContract,
   Warp,
 } from "warp-contracts";
@@ -148,17 +150,16 @@ export interface ValidatorsContract extends Contract<State> {
   token(): Promise<string>;
   epoch(): Promise<{ seq: string; tx: string; height: string }>;
   epochDuration(): Promise<number>;
-  updateEpoch(): Promise<string | null>;
-  join(stake: bigint, url: URL): Promise<string | null>;
-  leave(): Promise<string | null>;
-  proposeSlash(proposal: SlashProposal): Promise<string | null>;
-  voteSlash(tx: string, vote: "for" | "against"): Promise<string | null>;
+  updateEpoch(): Promise<string | BundleInteractionResponse>;
+  join(stake: bigint, url: URL): Promise<string | BundleInteractionResponse>;
+  leave(): Promise<string | BundleInteractionResponse>;
+  proposeSlash(proposal: SlashProposal): Promise<string | BundleInteractionResponse>;
+  voteSlash(tx: string, vote: "for" | "against"): Promise<string | BundleInteractionResponse>;
 }
 
 class ValidatorsContractImpl
   extends HandlerBasedContract<State>
-  implements ValidatorsContract
-{
+  implements ValidatorsContract {
   constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
     super(_contractTxId, warp);
   }
@@ -288,8 +289,8 @@ class ValidatorsContractImpl
     });
   }
 
-  write(input: any,): Promise<string | null> {
-    return this._mainnet ? this.bundleInteraction(input) : this.writeInteraction(input);
+  write(input: any,): Promise<string | BundleInteractionResponse> {
+    return this._mainnet ? this.bundleInteraction(input) as Promise<BundleInteractionResponse> : this.writeInteraction(input) as Promise<string>;
   }
 }
 
@@ -298,7 +299,7 @@ export async function deploy(
   wallet: ArWallet,
   initialState: State,
   useBundler: boolean = false
-): Promise<string> {
+): Promise<ContractDeploy> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );

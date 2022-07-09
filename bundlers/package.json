@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "typescript": "^4.6.2",
-    "warp-contracts": "^1.1.5"
+    "warp-contracts": "^1.1.8"
   },
   "devDependencies": {
     "@types/base64url": "^2.0.0",
