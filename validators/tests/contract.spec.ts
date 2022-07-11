@@ -27,7 +27,14 @@ import {
   State,
   ValidatorsContract,
 } from "../ts/contract";
-import { getTag, LoggerFactory, SmartWeaveTags, Warp, WarpNodeFactory } from "warp-contracts";
+import {
+  getTag,
+  LoggerFactory,
+  SmartWeaveTags,
+  Warp,
+  WarpNodeFactory,
+} from "warp-contracts";
+import { NetworkInfoInterface } from "arweave/node/network";
 
 jest.setTimeout(30000);
 
@@ -64,8 +71,8 @@ describe("Bundlers Contract", () => {
     });
 
     LoggerFactory.INST.logLevel("error");
-    LoggerFactory.INST.logLevel("debug", "WASM:Rust");
-    LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
+    // LoggerFactory.INST.logLevel("debug", "WASM:Rust");
+    // LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
 
     warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build();
 
@@ -104,7 +111,7 @@ describe("Bundlers Contract", () => {
       warp,
       accounts[0].wallet,
       initialTokenContractState
-    );
+    ).then((deployment) => deployment.contractTxId);
 
     const initialBundlersContractStateFromFile = JSON.parse(
       fs.readFileSync(
@@ -126,7 +133,7 @@ describe("Bundlers Contract", () => {
       warp,
       accounts[0].wallet,
       initialBundlersContractState
-    );
+    ).then((deployment) => deployment.contractTxId);
 
     const stateFromFile: State = JSON.parse(
       fs.readFileSync(path.join(__dirname, "./data/validators.json"), "utf8")
@@ -150,7 +157,9 @@ describe("Bundlers Contract", () => {
       epochDuration: 3,
     };
 
-    contractTxId = await deploy(warp, accounts[1].wallet, initialState);
+    contractTxId = await deploy(warp, accounts[1].wallet, initialState).then(
+      (deployment) => deployment.contractTxId
+    );
     await mineBlock(arweave);
 
     console.log(`Token Contract TX ID: ${tokenContractTxId}`);
@@ -161,11 +170,7 @@ describe("Bundlers Contract", () => {
       accounts.map(async (account) => {
         return Promise.all([
           connectTokenContract(warp, tokenContractTxId, account.wallet),
-          connectBundlersContract(
-            warp,
-            bundlersContractTxId,
-            account.wallet
-          ),
+          connectBundlersContract(warp, bundlersContractTxId, account.wallet),
           connect(warp, contractTxId, account.wallet),
         ]).then(([token, bundlers, validators]) => {
           return { token, bundlers, validators };
@@ -300,7 +305,9 @@ describe("Bundlers Contract", () => {
     }
     await mineBlock(arweave);
 
-    let networkInfo = connections[1].validators.getNetworkInfo();
+    // cast getNetworkInfo() result to ignore that it might return null
+    let networkInfo =
+      connections[1].validators.getNetworkInfo() as NetworkInfoInterface;
 
     let blocksNeeded = Math.max(
       0,
