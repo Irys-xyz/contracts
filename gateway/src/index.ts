@@ -39,8 +39,9 @@ function defaultPort(protocol: string) {
 }
 
 async function run(args: CliArgs) {
-  let arweaveUrl = new URL(args.arweave);
-  let listenUrl = new URL(args.listen);
+  console.log(JSON.stringify(args))
+  let arweaveUrl = new URL(args.arweave.replaceAll('"', ''));
+  let listenUrl = new URL(args.listen.replaceAll('"', ''));
 
   if (listenUrl.protocol != "http:") {
     throw Error(`Unsupported listen protocol: ${listenUrl.protocol}`);
@@ -55,7 +56,7 @@ async function run(args: CliArgs) {
     `Create contract gateway: arweave=${args.arweave}, contract=${args.contract}`
   );
 
-  let wallet = await readJwk(args.wallet);
+  let wallet = await readJwk(args.wallet.replaceAll('"', ''));
 
   let arweave: Arweave = Arweave.init({
     host: arweaveUrl.hostname,
@@ -109,17 +110,20 @@ if (process.env.npm_package_version) {
 dotenv.config();
 
 const appArgs = new Command();
+
+console.log(JSON.stringify(process.env))
+
 appArgs
   .version(appVersion)
   .option(
     "-a, --arweave",
     "Arweave connection",
-    process.env.GW_ARWEAVE ? process.env.GW_ARWEAVE : "https://arweave.net"
+    process.env.GW_ARWEAVE ?? "https://arweave.net"
   )
   .option(
     "-l, --listen",
     "Listen to address",
-    process.env.GW_LISTEN ? process.env.GW_LISTEN : "http://127.0.0.1:3000"
+    process.env.GW_LISTEN ?? "http://127.0.0.1:3000"
   )
   .requiredOption("-c, --contract", "Contract address", process.env.GW_CONTRACT)
   .requiredOption(

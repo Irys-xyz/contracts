@@ -1,11 +1,12 @@
 FROM node:16 
 
 WORKDIR ./validators
+
 COPY ./validators/ts/contract.ts ./ts/contract.ts
 COPY ./validators/package.json  ./package.json
 RUN yarn 
 
-WORKDIR ./gateway
+WORKDIR ../gateway
 
 COPY ./gateway/tsconfig.json ./tsconfig.json
 COPY ./gateway/src ./src
@@ -18,4 +19,4 @@ RUN yarn build
 
 EXPOSE 3000
 
-CMD ["node","./gateway/dist/gateway/src/index.js"]
+CMD ["node","/gateway/dist/gateway/src/index.js"]
