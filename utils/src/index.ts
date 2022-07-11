@@ -112,20 +112,20 @@ async function run(args: CliArgs) {
     secrets.wallets["test1"]
   );
   const bundlersContractOwnerAddress = await arweave.wallets.jwkToAddress(
-    secrets.wallets["bundlers-contract-owner"]
+    secrets.wallets["test1"]
   );
   const bundlerAddresses = await Promise.all([
-    arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"]),
-    arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"]),
   ]);
   const validatorAddresses = await Promise.all([
-    arweave.wallets.jwkToAddress(secrets.wallets["validator-1"]),
-    arweave.wallets.jwkToAddress(secrets.wallets["validator-2"]),
-    arweave.wallets.jwkToAddress(secrets.wallets["validator-3"]),
-    arweave.wallets.jwkToAddress(secrets.wallets["validator-4"]),
-    arweave.wallets.jwkToAddress(secrets.wallets["validator-5"]),
-    arweave.wallets.jwkToAddress(secrets.wallets["validator-6"]),
-    arweave.wallets.jwkToAddress(secrets.wallets["validator-7"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["validator-1"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["validator-2"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["validator-3"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["validator-4"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["validator-5"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["validator-6"]),
+    // arweave.wallets.jwkToAddress(secrets.wallets["validator-7"]),
   ]);
 
   const tokenContractSrc = await fs.readFile(

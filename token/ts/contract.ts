@@ -240,22 +240,23 @@ export function deploy(
   useBundler: boolean = false
 ): Promise<ContractDeploy> {
   console.error(arguments);
+  console.error(__dirname);
 
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
 
   // deploying contract using the new SDK.
-  return warp.createContract.deploy(
-    {
-      wallet,
-      initState: JSON.stringify(initialState),
-      src: contractSrc,
-      wasmSrcCodeDir: path.join(__dirname, "../src"),
-      wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
-    },
-    useBundler
-  );
+  const deployArgs = {
+    wallet,
+    initState: JSON.stringify(initialState),
+
+    src: contractSrc,
+    wasmSrcCodeDir: path.join(__dirname, "../src"),
+    wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
+  };
+  console.error(deployArgs, useBundler);
+  return warp.createContract.deploy(deployArgs, useBundler);
 }
 
 export async function connect(
