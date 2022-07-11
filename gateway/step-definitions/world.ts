@@ -38,8 +38,7 @@ class ArweaveWorld extends World {
 
   constructor(options: any) {
     super(options);
-    [this.arweaveConnection, this.warpConnection] =
-      arweave.getConnection();
+    [this.arweaveConnection, this.warpConnection] = arweave.getConnection();
     this.gateway = null;
     this.contractTxId = null;
     this.validators = [];
@@ -96,7 +95,7 @@ class ArweaveWorld extends World {
       warp,
       accounts[0].wallet,
       initialTokenContractState
-    );
+    ).then((deployment) => deployment.contractTxId);
 
     const initialBundlersContractStateFromFile = JSON.parse(
       fs.readFileSync(
@@ -118,7 +117,7 @@ class ArweaveWorld extends World {
       warp,
       accounts[0].wallet,
       initialBundlersContractState
-    );
+    ).then((deployment) => deployment.contractTxId);
 
     const stateFromFile: State = JSON.parse(
       fs.readFileSync(
@@ -145,7 +144,9 @@ class ArweaveWorld extends World {
       epochDuration: 3,
     };
 
-    contractTxId = await deploy(warp, accounts[1].wallet, initialState);
+    contractTxId = await deploy(warp, accounts[1].wallet, initialState).then(
+      (deployment) => deployment.contractTxId
+    );
 
     await mineBlock(this.arweaveConnection);
 
