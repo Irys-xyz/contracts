@@ -10,6 +10,7 @@ import {
 
 export type State = {
   bundlers: { [key: string]: string | null };
+  allowedInteractors: string[];
   token: string;
   stake: string;
   withdrawDelay: number;
