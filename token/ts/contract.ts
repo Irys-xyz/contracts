@@ -218,8 +218,18 @@ class TokenContractImpl
 
   write(input: any): Promise<string> {
     return this._mainnet
-      ? this.bundleInteraction(input).then((response) => response.originalTxId)
-      : this.writeInteraction(input);
+      ? this.bundleInteraction(input).then((response) => {
+          if (response) {
+            return response.originalTxId;
+          }
+          throw Error("Received 'null' as interaction response");
+        })
+      : this.writeInteraction(input).then((result) => {
+          if (result) {
+            return result;
+          }
+          throw Error("Received 'null' as interaction response");
+        });
   }
 }
 

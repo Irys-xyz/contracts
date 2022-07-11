@@ -21,6 +21,7 @@ import {
 
 import { addFunds, mineBlock } from "../ts/utils";
 import { connect, deploy, State, BundlersContract } from "../ts/contract";
+import { NetworkInfoInterface } from "arweave/node/network";
 
 jest.setTimeout(30000);
 
@@ -284,7 +285,10 @@ describe("Bundlers Contract", () => {
     // FIXME: is there any better way to sync the state after mining?
     await connections[1].bundlers.currentState();
 
-    let networkInfo = connections[1].bundlers.getNetworkInfo();
+    // cast getNetworkInfo() result to ignore that it might return null
+    const networkInfo =
+      connections[1].bundlers.getNetworkInfo() as NetworkInfoInterface;
+
     expect(await connections[0].bundlers.bundlers()).toEqual(
       expect.objectContaining({
         // FIXME: why the bundlers map has strings as values instead of bigints
@@ -322,7 +326,9 @@ describe("Bundlers Contract", () => {
       accounts[1].address
     ];
 
-    let networkInfo = connections[1].bundlers.getNetworkInfo();
+    // cast getNetworkInfo() result to ignore that it might return null
+    let networkInfo =
+      connections[1].bundlers.getNetworkInfo() as NetworkInfoInterface;
 
     let blocksNeeded = Math.max(
       0,

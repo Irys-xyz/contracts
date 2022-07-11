@@ -34,6 +34,7 @@ import {
   Warp,
   WarpNodeFactory,
 } from "warp-contracts";
+import { NetworkInfoInterface } from "arweave/node/network";
 
 jest.setTimeout(30000);
 
@@ -304,7 +305,9 @@ describe("Bundlers Contract", () => {
     }
     await mineBlock(arweave);
 
-    let networkInfo = connections[1].validators.getNetworkInfo();
+    // cast getNetworkInfo() result to ignore that it might return null
+    let networkInfo =
+      connections[1].validators.getNetworkInfo() as NetworkInfoInterface;
 
     let blocksNeeded = Math.max(
       0,
