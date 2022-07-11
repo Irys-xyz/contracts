@@ -6,23 +6,25 @@ import { Command } from "commander";
 
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { WarpNodeFactory } from "warp-contracts";
+import { Warp, WarpNodeFactory } from "warp-contracts";
 
 import {
+  connect as connectTokenContract,
   deploy as deployTokenContract,
-  TokenContract,
-  TokenState,
+  TokenState as TokenContractState,
 } from "../../token/ts/contract";
 import {
+  connect as connectBundlersContract,
   deploy as deployBundlersContract,
-  BundlersContract,
+  State as BundlersContractState,
 } from "../../bundlers/ts/contract";
 import {
+  connect as connectValidatorsContract,
   deploy as deployValidatorsContract,
-  ValidatorsContract,
+  State as ValidatorsContractState,
 } from "../../validators/ts/contract";
 
-type Secrets = {
+interface Secrets {
   wallets: {
     ["token-contract-owner"]: JWKInterface;
     ["bundlers-contract-owner"]: JWKInterface;
@@ -37,13 +39,13 @@ type Secrets = {
     ["validator-7"]: JWKInterface;
     ["test1"]: JWKInterface;
   };
-};
+}
 
 function readSecrets(filepath: string): Promise<Secrets> {
   let f = path.resolve(process.cwd(), filepath);
   return fs.readFile(f).then((walletData) => {
     let json = JSON.parse(walletData.toString());
-    return json;
+    return json as Secrets;
   });
 }
 
@@ -51,6 +53,8 @@ type CliArgs = {
   gateway: string;
   secrets: string;
   arlocal: boolean;
+  bundlerStake: string;
+  minimumValidatorStake: string;
 };
 
 function defaultPort(protocol: string) {
@@ -65,34 +69,186 @@ function defaultPort(protocol: string) {
 }
 
 class ArLocal {
-  arweave: Arweave;
-  constructor(arweave: Arweave) {
+  arweave?: Arweave;
+  constructor(arweave?: Arweave) {
     this.arweave = arweave;
   }
   async mine() {
-    return this.arweave.api.get("mine");
-  }
-}
-
-interface MaybeCallback<T> {
-  (value: T): void;
-}
-
-class Maybe<T> {
-  value?: T;
-  constructor(value?: T) {
-    this.value = value;
-  }
-  then(cb: MaybeCallback<T>): void {
-    if (this.value) {
-      cb(this.value);
+    if (this.arweave) {
+      return this.arweave.api.get("mine");
     }
   }
+}
+
+function createWarpNode(arlocal: boolean, arweave: Arweave) {
+  if (arlocal) {
+    return WarpNodeFactory.forTesting(arweave);
+  } else {
+    return WarpNodeFactory.memCached(arweave);
+  }
+}
+
+async function doTokenContractDeployment(
+  warp: Warp,
+  wallet: JWKInterface,
+  initialStateFile: string,
+  useBundler: boolean
+) {
+  const tokenContractOwnerAddress = await warp.arweave.wallets.jwkToAddress(
+    wallet
+  );
+
+  const contractStateFromFile = await fs
+    .readFile(path.resolve(initialStateFile), "utf8")
+    .then((data) => JSON.parse(data.toString()));
+
+  const initialContractState = {
+    ...contractStateFromFile,
+    ...{
+      owner: tokenContractOwnerAddress,
+      balances: {
+        [tokenContractOwnerAddress]:
+          contractStateFromFile.totalSupply.toString(),
+      },
+    },
+  };
+
+  const { contractTxId } = await deployTokenContract(
+    warp,
+    wallet,
+    initialContractState,
+    useBundler
+  );
+
+  return contractTxId;
+}
+
+async function approve(
+  warp: Warp,
+  wallet: JWKInterface,
+  contractTxId: string,
+  spenderAddress: string,
+  amount: bigint
+) {
+  let connection = await connectTokenContract(warp, contractTxId, wallet);
+  return connection.approve(spenderAddress, amount);
+}
+
+async function transfer(
+  warp: Warp,
+  wallet: JWKInterface,
+  contractTxId: string,
+  toAddress: string,
+  amount: bigint
+) {
+  let connection = await connectTokenContract(warp, contractTxId, wallet);
+  return connection.transfer(toAddress, amount);
+}
+
+async function doBundlersContractDeployment(
+  warp: Warp,
+  wallet: JWKInterface,
+  initialStateFile: string,
+  tokenContractTxId: string,
+  bundlerStake: bigint,
+  useBundler: boolean
+) {
+  const bundlersContractOwnerAddress = await warp.arweave.wallets.jwkToAddress(
+    wallet
+  );
+
+  const initialContractState: BundlersContractState = await fs
+    .readFile(path.resolve(initialStateFile), "utf8")
+    .then((data) => JSON.parse(data.toString()));
+
+  initialContractState.token = tokenContractTxId;
+  initialContractState.stake = bundlerStake.toString();
+  initialContractState.allowedInteractors.push(bundlersContractOwnerAddress);
+  // just to be sure, deduplicate
+  initialContractState.allowedInteractors = [
+    ...new Set(initialContractState.allowedInteractors),
+  ];
+
+  const { contractTxId } = await deployBundlersContract(
+    warp,
+    wallet,
+    initialContractState,
+    useBundler
+  );
+
+  return contractTxId;
+}
+
+async function allowInteractions(
+  warp: Warp,
+  approver: JWKInterface,
+  contractTxId: string,
+  allowedAddress: string
+) {
+  let connection = await connectBundlersContract(warp, contractTxId, approver);
+  return connection.addAllowedInteractor(allowedAddress);
+}
+
+async function bundlersJoin(
+  warp: Warp,
+  bundler: JWKInterface,
+  contractTxId: string
+) {
+  let connection = await connectBundlersContract(warp, contractTxId, bundler);
+  return connection.join();
+}
+
+async function doValidatorsContractDeployment(
+  warp: Warp,
+  wallet: JWKInterface,
+  initialStateFile: string,
+  tokenContractTxId: string,
+  bundlersContractTxId: string,
+  minimumValidatorStake: bigint,
+  useBundler: boolean
+) {
+  const bundlerAddress = await warp.arweave.wallets.jwkToAddress(wallet);
+
+  const initialContractState: ValidatorsContractState = await fs
+    .readFile(path.resolve(initialStateFile), "utf8")
+    .then((data) => JSON.parse(data.toString()));
+
+  initialContractState.token = tokenContractTxId;
+  initialContractState.bundlersContract = bundlersContractTxId;
+  initialContractState.bundler = bundlerAddress;
+  initialContractState.minimumStake = minimumValidatorStake.toString();
+
+  const { contractTxId } = await deployValidatorsContract(
+    warp,
+    wallet,
+    initialContractState,
+    useBundler
+  );
+
+  return contractTxId;
+}
+
+async function validatorJoin(
+  warp: Warp,
+  validator: JWKInterface,
+  contractTxId: string,
+  stake: bigint,
+  url: URL
+) {
+  let connection = await connectValidatorsContract(
+    warp,
+    contractTxId,
+    validator
+  );
+  return connection.join(stake, url);
 }
 
 async function run(args: CliArgs) {
   const arweaveUrl = new URL(args.gateway);
   const secrets = await readSecrets(args.secrets);
+
+  const bundlerStake = BigInt(args.bundlerStake);
+  const minimumValidatorStake = BigInt(args.minimumValidatorStake);
 
   const gwPort = arweaveUrl.port
     ? Number.parseInt(arweaveUrl.port)
@@ -104,85 +260,282 @@ async function run(args: CliArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  const arlocal = new Maybe(args.arlocal ? new ArLocal(arweave) : undefined);
+  const warp = createWarpNode(args.arlocal, arweave);
 
-  const warp = WarpNodeFactory.memCached(arweave);
+  const arlocal = new ArLocal(args.arlocal ? arweave : undefined);
 
-  const tokenContractOwnerAddress = await arweave.wallets.jwkToAddress(
-    secrets.wallets["test1"]
-  );
-  const bundlersContractOwnerAddress = await arweave.wallets.jwkToAddress(
-    secrets.wallets["test1"]
-  );
-  const bundlerAddresses = await Promise.all([
-    // arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"]),
-    // arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"]),
-  ]);
-  const validatorAddresses = await Promise.all([
-    // arweave.wallets.jwkToAddress(secrets.wallets["validator-1"]),
-    // arweave.wallets.jwkToAddress(secrets.wallets["validator-2"]),
-    // arweave.wallets.jwkToAddress(secrets.wallets["validator-3"]),
-    // arweave.wallets.jwkToAddress(secrets.wallets["validator-4"]),
-    // arweave.wallets.jwkToAddress(secrets.wallets["validator-5"]),
-    // arweave.wallets.jwkToAddress(secrets.wallets["validator-6"]),
-    // arweave.wallets.jwkToAddress(secrets.wallets["validator-7"]),
-  ]);
-
-  const tokenContractSrc = await fs.readFile(
-    path.join(__dirname, "../../token/pkg/rust-contract_bg.wasm")
-  );
-
-  const tokenContractStateFromFile: TokenState = await fs
-    .readFile(
-      path.resolve(`${__dirname}/../data/initial-token-state.json`),
-      "utf8"
-    )
-    .then((data) => JSON.parse(data.toString()));
-
-  const initialTokenContractState: TokenState = {
-    ...tokenContractStateFromFile,
-    ...{
-      owner: tokenContractOwnerAddress,
-      balances: {
-        [tokenContractOwnerAddress]:
-          tokenContractStateFromFile.totalSupply.toString(),
-      },
-    },
-  };
-
-  const { contractTxId: tokenContractTxId } = await deployTokenContract(
+  const tokenContractTxId = await doTokenContractDeployment(
     warp,
-    secrets.wallets["test1"],
-    initialTokenContractState,
+    secrets.wallets["token-contract-owner"],
+    `${__dirname}/../data/initial-token-state.json`,
     !args.arlocal
   );
 
-  arlocal.then(async (arlocal) => await arlocal.mine());
+  await arlocal.mine();
 
-  const initialBundlersContractState = await fs
-    .readFile(
-      path.resolve(`${__dirname}/../data/initial-bundlers-state.json`),
-      "utf8"
-    )
-    .then((data) => JSON.parse(data.toString()));
-
-  initialBundlersContractState.token = tokenContractTxId;
-  initialBundlersContractState.allowedInteractors.push(
-    bundlersContractOwnerAddress
-  );
-  // just to be sure, deduplicate
-  initialBundlersContractState.allowedInteractors = [
-    ...new Set(initialBundlersContractState.allowedInteractors),
-  ];
-
-  await deployBundlersContract(
+  const bundlersContractTxId = await doBundlersContractDeployment(
     warp,
     secrets.wallets["bundlers-contract-owner"],
-    initialBundlersContractState,
+    `${__dirname}/../data/initial-bundlers-state.json`,
+    tokenContractTxId,
+    bundlerStake,
     !args.arlocal
   );
 
-  arlocal.then(async (arlocal) => await arlocal.mine());
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"]),
+    bundlerStake
+  );
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"]),
+    bundlerStake
+  );
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["validator-1"]),
+    minimumValidatorStake
+  );
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["validator-2"]),
+    minimumValidatorStake
+  );
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["validator-3"]),
+    minimumValidatorStake
+  );
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["validator-4"]),
+    minimumValidatorStake
+  );
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["validator-5"]),
+    minimumValidatorStake
+  );
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["validator-6"]),
+    minimumValidatorStake
+  );
+  await arlocal.mine();
+
+  await transfer(
+    warp,
+    secrets.wallets["token-contract-owner"],
+    tokenContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["validator-7"]),
+    minimumValidatorStake
+  );
+  await arlocal.mine();
+
+  await allowInteractions(
+    warp,
+    secrets.wallets["bundlers-contract-owner"],
+    bundlersContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"])
+  );
+  await arlocal.mine();
+  await allowInteractions(
+    warp,
+    secrets.wallets["bundlers-contract-owner"],
+    bundlersContractTxId,
+    await arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"])
+  );
+  await arlocal.mine();
+
+  await approve(
+    warp,
+    secrets.wallets["bundler-1"],
+    tokenContractTxId,
+    bundlersContractTxId,
+    bundlerStake
+  );
+  await arlocal.mine();
+  await approve(
+    warp,
+    secrets.wallets["bundler-2"],
+    tokenContractTxId,
+    bundlersContractTxId,
+    bundlerStake
+  );
+  await arlocal.mine();
+
+  await bundlersJoin(warp, secrets.wallets["bundler-1"], bundlersContractTxId);
+  await arlocal.mine();
+  await bundlersJoin(warp, secrets.wallets["bundler-2"], bundlersContractTxId);
+  await arlocal.mine();
+
+  const validatorsContract1 = await doValidatorsContractDeployment(
+    warp,
+    secrets.wallets["bundler-1"],
+    `${__dirname}/../data/initial-validators-state.json`,
+    tokenContractTxId,
+    bundlersContractTxId,
+    minimumValidatorStake,
+    !args.arlocal
+  );
+  await arlocal.mine();
+
+  const validatorsContract2 = await doValidatorsContractDeployment(
+    warp,
+    secrets.wallets["bundler-2"],
+    `${__dirname}/../data/initial-validators-state.json`,
+    tokenContractTxId,
+    bundlersContractTxId,
+    minimumValidatorStake,
+    !args.arlocal
+  );
+  await arlocal.mine();
+
+  await Promise.all([
+    approve(
+      warp,
+      secrets.wallets["validator-1"],
+      tokenContractTxId,
+      validatorsContract1,
+      minimumValidatorStake
+    ),
+    approve(
+      warp,
+      secrets.wallets["validator-2"],
+      tokenContractTxId,
+      validatorsContract1,
+      minimumValidatorStake
+    ),
+    approve(
+      warp,
+      secrets.wallets["validator-3"],
+      tokenContractTxId,
+      validatorsContract1,
+      minimumValidatorStake
+    ),
+    approve(
+      warp,
+      secrets.wallets["validator-4"],
+      tokenContractTxId,
+      validatorsContract2,
+      minimumValidatorStake
+    ),
+    approve(
+      warp,
+      secrets.wallets["validator-5"],
+      tokenContractTxId,
+      validatorsContract2,
+      minimumValidatorStake
+    ),
+    approve(
+      warp,
+      secrets.wallets["validator-6"],
+      tokenContractTxId,
+      validatorsContract2,
+      minimumValidatorStake
+    ),
+    approve(
+      warp,
+      secrets.wallets["validator-7"],
+      tokenContractTxId,
+      validatorsContract2,
+      minimumValidatorStake
+    ),
+  ]);
+  await arlocal.mine();
+
+  await Promise.all([
+    validatorJoin(
+      warp,
+      secrets.wallets["validator-1"],
+      validatorsContract1,
+      minimumValidatorStake,
+      new URL("https://1.example.com")
+    ),
+    validatorJoin(
+      warp,
+      secrets.wallets["validator-2"],
+      validatorsContract1,
+      minimumValidatorStake,
+      new URL("https://2.example.com")
+    ),
+    validatorJoin(
+      warp,
+      secrets.wallets["validator-3"],
+      validatorsContract1,
+      minimumValidatorStake,
+      new URL("https://3.example.com")
+    ),
+    validatorJoin(
+      warp,
+      secrets.wallets["validator-4"],
+      validatorsContract2,
+      minimumValidatorStake,
+      new URL("https://4.example.com")
+    ),
+    validatorJoin(
+      warp,
+      secrets.wallets["validator-5"],
+      validatorsContract2,
+      minimumValidatorStake,
+      new URL("https://5.example.com")
+    ),
+    validatorJoin(
+      warp,
+      secrets.wallets["validator-6"],
+      validatorsContract2,
+      minimumValidatorStake,
+      new URL("https://6.example.com")
+    ),
+    validatorJoin(
+      warp,
+      secrets.wallets["validator-7"],
+      validatorsContract2,
+      minimumValidatorStake,
+      new URL("https://7.example.com")
+    ),
+  ]);
+  await arlocal.mine();
+
+  return {
+    token: tokenContractTxId,
+    bundlers: bundlersContractTxId,
+    validators1: validatorsContract1,
+    validators2: validatorsContract2,
+  };
 }
 
 let appVersion: string;
@@ -198,11 +551,22 @@ appArgs
   .version(appVersion)
   .requiredOption("-g, --gateway <url>", "Arweave gateway URL")
   .requiredOption("-s, --secrets <path>", "Path to file containing all secrets")
-  .option("-a, --arlocal", "Deploy to ArLocal");
+  .option("-a, --arlocal", "Deploy to ArLocal")
+  .option(
+    "--minimum-validator-stake",
+    "Minimun stake required from validators to allow joining",
+    "100"
+  )
+  .option(
+    "--bundler-stake",
+    "Stake required from bundlers to allow joining",
+    "100"
+  );
 
 run(appArgs.parse(process.argv).opts())
-  .then((txId) => {
+  .then((res) => {
     console.error("Done");
+    console.log(JSON.stringify(res));
     process.exit(0);
   })
   .catch((err) => {

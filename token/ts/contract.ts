@@ -239,9 +239,6 @@ export function deploy(
   initialState: TokenState,
   useBundler: boolean = false
 ): Promise<ContractDeploy> {
-  console.error(arguments);
-  console.error(__dirname);
-
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
@@ -255,7 +252,6 @@ export function deploy(
     wasmSrcCodeDir: path.join(__dirname, "../src"),
     wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
   };
-  console.error(deployArgs, useBundler);
   return warp.createContract.deploy(deployArgs, useBundler);
 }
 
