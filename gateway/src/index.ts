@@ -11,7 +11,6 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 import { WarpNodeFactory } from "warp-contracts";
 
 import app from "./app";
-import path from "node:path";
 
 function readJwk(path: string): Promise<JWKInterface> {
   return fs.readFile(path).then((walletData) => {
@@ -69,7 +68,7 @@ async function run(args: CliArgs) {
   let appInstance = await app.create(
     arweave,
     warp,
-    args.contract,
+    args.contract.replaceAll('"', ''),
     wallet
   );
 
@@ -110,8 +109,6 @@ if (process.env.npm_package_version) {
 dotenv.config();
 
 const appArgs = new Command();
-
-console.log(JSON.stringify(process.env))
 
 appArgs
   .version(appVersion)
