@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "moduleResolution": "node",
-    "module": "commonjs",
+    "moduleResolution": "Node",
     "target": "ES2018",
-    "outDir": "./dist",
+    "lib": ["dom"],
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "downlevelIteration": true,
+    "allowJs": true,
     "strict": true
   },
   "include": ["src/**/*.ts"],
