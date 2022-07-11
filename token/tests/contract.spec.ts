@@ -7,7 +7,13 @@ import { JWKInterface } from "arweave/node/lib/wallet";
 
 import { addFunds, mineBlock } from "../ts/utils";
 import { deploy, connect, TokenState, TokenContract } from "../ts/contract";
-import { getTag, LoggerFactory, SmartWeaveTags, Warp, WarpNodeFactory } from "warp-contracts";
+import {
+  getTag,
+  LoggerFactory,
+  SmartWeaveTags,
+  Warp,
+  WarpNodeFactory,
+} from "warp-contracts";
 
 jest.setTimeout(30000);
 
@@ -36,8 +42,9 @@ describe("Test Token", () => {
     });
 
     LoggerFactory.INST.logLevel("error");
-    LoggerFactory.INST.logLevel("debug", "WASM:Rust");
-    LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
+    // LoggerFactory.INST.logLevel("warn", "HandlerBasedContract");
+    // LoggerFactory.INST.logLevel("warn", "WASM:Rust");
+    // LoggerFactory.INST.logLevel("warn", "WasmContractHandlerApi");
 
     warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build();
 
@@ -68,7 +75,9 @@ describe("Test Token", () => {
       },
     };
 
-    contractTxId = await deploy(warp, wallets[0].wallet, initialState);
+    contractTxId = await deploy(warp, wallets[0].wallet, initialState).then(
+      (res) => res.contractTxId
+    );
 
     console.log(`TokenContract TX ID: ${contractTxId}`);
 

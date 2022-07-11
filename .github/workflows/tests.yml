@@ -18,7 +18,7 @@ jobs:
         run: yarn build
         working-directory: token
       - name: Token - run tests
-        run: yarn test
+        run: yarn test --detectOpenHandles
         working-directory: token
       - name: Bundlers - install
         run: yarn install --frozen-lockfile
@@ -27,7 +27,7 @@ jobs:
         run: yarn build
         working-directory: bundlers
       - name: Bundlers - run tests
-        run: yarn test
+        run: yarn test --detectOpenHandles
         working-directory: bundlers
       - name: Validators - install
         run: yarn install --frozen-lockfile
@@ -36,7 +36,7 @@ jobs:
         run: yarn build
         working-directory: validators
       - name: Validators - run tests
-        run: yarn test
+        run: yarn test --detectOpenHandles
         working-directory: validators
       - name: Contract Gateway - install
         run: yarn install --frozen-lockfile

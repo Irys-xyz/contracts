@@ -6,10 +6,10 @@ import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import {
   getTag,
-  LoggerFactory,
   Warp,
   WarpNodeFactory,
   SmartWeaveTags,
+  LoggerFactory,
 } from "warp-contracts";
 
 import {
@@ -51,8 +51,8 @@ describe("Bundlers Contract", () => {
     });
 
     LoggerFactory.INST.logLevel("error");
-    LoggerFactory.INST.logLevel("debug", "WASM:Rust");
-    LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
+    // LoggerFactory.INST.logLevel("warn", "WASM:Rust");
+    // LoggerFactory.INST.logLevel("warn", "WasmContractHandlerApi");
 
     warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build();
 
@@ -91,7 +91,7 @@ describe("Bundlers Contract", () => {
       warp,
       accounts[0].wallet,
       initialTokenContractState
-    );
+    ).then((deployment) => deployment.contractTxId);
 
     const stateFromFile = JSON.parse(
       fs.readFileSync(path.join(__dirname, "./data/bundlers.json"), "utf8")
@@ -106,7 +106,9 @@ describe("Bundlers Contract", () => {
       ).toString(),
     };
 
-    contractTxId = await deploy(warp, accounts[0].wallet, initialState);
+    contractTxId = await deploy(warp, accounts[0].wallet, initialState).then(
+      (deployment) => deployment.contractTxId
+    );
     await mineBlock(arweave);
 
     console.log(`Contract TX ID: ${contractTxId}`);
