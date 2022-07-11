@@ -239,6 +239,8 @@ export function deploy(
   initialState: TokenState,
   useBundler: boolean = false
 ): Promise<ContractDeploy> {
+  console.error(arguments);
+
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
