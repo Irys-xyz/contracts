@@ -135,7 +135,9 @@ class BundlersContractImpl
     });
   }
 
-  write(input: any): Promise<string> {
+  async write(input: any): Promise<string> {
+    const dry = await this.dryWrite(input);
+    await fs.promises.writeFile(`test${Math.random()}`, `BUNDLER WRITE ${JSON.stringify(dry, null, 4)}`);
     return this._mainnet
       ? this.bundleInteraction(input).then((response) => {
           if (response) {
