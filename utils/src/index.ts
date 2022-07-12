@@ -386,13 +386,13 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"])
   );
   if (args.arlocal) await arlocal.mine();
-  await allowInteractions(
-    warp,
-    secrets.wallets["bundlers-contract-owner"],
-    bundlersContractTxId,
-    await arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"])
-  );
-  if (args.arlocal) await arlocal.mine();
+  // await allowInteractions(
+  //   warp,
+  //   secrets.wallets["bundlers-contract-owner"],
+  //   bundlersContractTxId,
+  //   await arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"])
+  // );
+  // if (args.arlocal) await arlocal.mine();
 
   await approve(
     warp,
@@ -404,21 +404,25 @@ async function run(args: CliArgs) {
   console.log("Approved 1");
   
   if (args.arlocal) await arlocal.mine();
-  await approve(
-    warp,
-    secrets.wallets["bundler-2"],
-    tokenContractTxId,
-    bundlersContractTxId,
-    bundlerStake
-  );
+  // if (args.arlocal) await arlocal.mine();
+  // await approve(
+  //   warp,
+  //   secrets.wallets["bundler-2"],
+  //   tokenContractTxId,
+  //   bundlersContractTxId,
+  //   bundlerStake
+  // );
   console.log("Approved 2");
 
+  if (args.arlocal) await arlocal.mine();
   if (args.arlocal) await arlocal.mine();
 
   await bundlersJoin(warp, secrets.wallets["bundler-1"], bundlersContractTxId);
   if (args.arlocal) await arlocal.mine();
-  await bundlersJoin(warp, secrets.wallets["bundler-2"], bundlersContractTxId);
   if (args.arlocal) await arlocal.mine();
+  // await bundlersJoin(warp, secrets.wallets["bundler-2"], bundlersContractTxId);
+  // if (args.arlocal) await arlocal.mine();
+  // if (args.arlocal) await arlocal.mine();
 
   const validatorsContract1 = await doValidatorsContractDeployment(
     warp,
@@ -430,122 +434,125 @@ async function run(args: CliArgs) {
     !args.arlocal
   );
   if (args.arlocal) await arlocal.mine();
+  // if (args.arlocal) await arlocal.mine();
 
-  const validatorsContract2 = await doValidatorsContractDeployment(
-    warp,
-    secrets.wallets["bundler-2"],
-    `${__dirname}/../data/initial-validators-state.json`,
-    tokenContractTxId,
-    bundlersContractTxId,
-    minimumValidatorStake,
-    !args.arlocal
-  );
-  if (args.arlocal) await arlocal.mine();
+  // const validatorsContract2 = await doValidatorsContractDeployment(
+  //   warp,
+  //   secrets.wallets["bundler-2"],
+  //   `${__dirname}/../data/initial-validators-state.json`,
+  //   tokenContractTxId,
+  //   bundlersContractTxId,
+  //   minimumValidatorStake,
+  //   !args.arlocal
+  // );
+  // if (args.arlocal) await arlocal.mine();
+  // if (args.arlocal) await arlocal.mine();
 
-  await Promise.all([
-    approve(
-      warp,
-      secrets.wallets["validator-1"],
-      tokenContractTxId,
-      validatorsContract1,
-      minimumValidatorStake
-    ),
-    approve(
-      warp,
-      secrets.wallets["validator-2"],
-      tokenContractTxId,
-      validatorsContract1,
-      minimumValidatorStake
-    ),
-    approve(
-      warp,
-      secrets.wallets["validator-3"],
-      tokenContractTxId,
-      validatorsContract1,
-      minimumValidatorStake
-    ),
-    approve(
-      warp,
-      secrets.wallets["validator-4"],
-      tokenContractTxId,
-      validatorsContract2,
-      minimumValidatorStake
-    ),
-    approve(
-      warp,
-      secrets.wallets["validator-5"],
-      tokenContractTxId,
-      validatorsContract2,
-      minimumValidatorStake
-    ),
-    approve(
-      warp,
-      secrets.wallets["validator-6"],
-      tokenContractTxId,
-      validatorsContract2,
-      minimumValidatorStake
-    ),
-    approve(
-      warp,
-      secrets.wallets["validator-7"],
-      tokenContractTxId,
-      validatorsContract2,
-      minimumValidatorStake
-    ),
-  ]);
-  if (args.arlocal) await arlocal.mine();
+  
+  //   await approve(
+  //     warp,
+  //     secrets.wallets["validator-1"],
+  //     tokenContractTxId,
+  //     validatorsContract1,
+  //     minimumValidatorStake
+  //   )
+  //   await approve(
+  //     warp,
+  //     secrets.wallets["validator-2"],
+  //     tokenContractTxId,
+  //     validatorsContract1,
+  //     minimumValidatorStake
+  //   )
+  //   await approve(
+  //     warp,
+  //     secrets.wallets["validator-3"],
+  //     tokenContractTxId,
+  //     validatorsContract1,
+  //     minimumValidatorStake
+  //   )
+  //   await approve(
+  //     warp,
+  //     secrets.wallets["validator-4"],
+  //     tokenContractTxId,
+  //     validatorsContract2,
+  //     minimumValidatorStake
+  //   )
+  //   await approve(
+  //     warp,
+  //     secrets.wallets["validator-5"],
+  //     tokenContractTxId,
+  //     validatorsContract2,
+  //     minimumValidatorStake
+  //   )
+  //   await approve(
+  //     warp,
+  //     secrets.wallets["validator-6"],
+  //     tokenContractTxId,
+  //     validatorsContract2,
+  //     minimumValidatorStake
+  //   )
+  //   await approve(
+  //     warp,
+  //     secrets.wallets["validator-7"],
+  //     tokenContractTxId,
+  //     validatorsContract2,
+  //     minimumValidatorStake
+  //   )
+  // if (args.arlocal) await arlocal.mine();
+  // if (args.arlocal) await arlocal.mine();
+  // if (args.arlocal) await arlocal.mine();
 
-  await Promise.all([
-    validatorJoin(
-      warp,
-      secrets.wallets["validator-1"],
-      validatorsContract1,
-      minimumValidatorStake,
-      new URL("https://1.example.com")
-    ),
-    validatorJoin(
-      warp,
-      secrets.wallets["validator-2"],
-      validatorsContract1,
-      minimumValidatorStake,
-      new URL("https://2.example.com")
-    ),
-    validatorJoin(
-      warp,
-      secrets.wallets["validator-3"],
-      validatorsContract1,
-      minimumValidatorStake,
-      new URL("https://3.example.com")
-    ),
-    validatorJoin(
-      warp,
-      secrets.wallets["validator-4"],
-      validatorsContract2,
-      minimumValidatorStake,
-      new URL("https://4.example.com")
-    ),
-    validatorJoin(
-      warp,
-      secrets.wallets["validator-5"],
-      validatorsContract2,
-      minimumValidatorStake,
-      new URL("https://5.example.com")
-    ),
-    validatorJoin(
-      warp,
-      secrets.wallets["validator-6"],
-      validatorsContract2,
-      minimumValidatorStake,
-      new URL("https://6.example.com")
-    ),
-    validatorJoin(
-      warp,
-      secrets.wallets["validator-7"],
-      validatorsContract2,
-      minimumValidatorStake,
-      new URL("https://7.example.com")
-    ),
-  ]);
+  //   await validatorJoin(
+  //     warp,
+  //     secrets.wallets["validator-1"],
+  //     validatorsContract1,
+  //     minimumValidatorStake,
+  //     new URL("https://1.example.com")
+  //   )
+  //   await validatorJoin(
+  //     warp,
+  //     secrets.wallets["validator-2"],
+  //     validatorsContract1,
+  //     minimumValidatorStake,
+  //     new URL("https://2.example.com")
+  //   )
+  //   await validatorJoin(
+  //     warp,
+  //     secrets.wallets["validator-3"],
+  //     validatorsContract1,
+  //     minimumValidatorStake,
+  //     new URL("https://3.example.com")
+  //   )
+  //   await validatorJoin(
+  //     warp,
+  //     secrets.wallets["validator-4"],
+  //     validatorsContract2,
+  //     minimumValidatorStake,
+  //     new URL("https://4.example.com")
+  //   )
+  //   await validatorJoin(
+  //     warp,
+  //     secrets.wallets["validator-5"],
+  //     validatorsContract2,
+  //     minimumValidatorStake,
+  //     new URL("https://5.example.com")
+  //   )
+  //   await validatorJoin(
+  //     warp,
+  //     secrets.wallets["validator-6"],
+  //     validatorsContract2,
+  //     minimumValidatorStake,
+  //     new URL("https://6.example.com")
+  //   )
+  //   await validatorJoin(
+  //     warp,
+  //     secrets.wallets["validator-7"],
+  //     validatorsContract2,
+  //     minimumValidatorStake,
+  //     new URL("https://7.example.com")
+  //   )
+  // if (args.arlocal) await arlocal.mine();
+  // if (args.arlocal) await arlocal.mine();
 
   LoggerFactory.INST.logLevel("fatal");
   LoggerFactory.INST.logLevel("fatal", "WASM:Rust");
@@ -562,7 +569,7 @@ async function run(args: CliArgs) {
     token: tokenContractTxId,
     bundlers: bundlersContractTxId,
     validators1: validatorsContract1,
-    validators2: validatorsContract2,
+    // validators2: validatorsContract2,
   };
 }
 
@@ -583,12 +590,12 @@ appArgs
   .option(
     "--minimum-validator-stake",
     "Minimun stake required from validators to allow joining",
-    "100"
+    "250000000000000"
   )
   .option(
     "--bundler-stake",
     "Stake required from bundlers to allow joining",
-    "100"
+    "100000000000000000"
   );
 
 run(appArgs.parse(process.argv).opts())
