@@ -289,7 +289,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"]),
-    bundlerStake
+    bundlerStake * BigInt("2")
   );
   await arlocal.mine();
 
@@ -298,7 +298,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"]),
-    bundlerStake
+    bundlerStake * BigInt("2")
   );
   await arlocal.mine();
 
@@ -307,7 +307,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-1"]),
-    minimumValidatorStake
+    minimumValidatorStake * BigInt("2")
   );
   await arlocal.mine();
 
@@ -316,7 +316,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-2"]),
-    minimumValidatorStake
+    minimumValidatorStake * BigInt("2")
   );
   await arlocal.mine();
 
@@ -325,7 +325,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-3"]),
-    minimumValidatorStake
+    minimumValidatorStake * BigInt("2")
   );
   await arlocal.mine();
 
@@ -334,7 +334,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-4"]),
-    minimumValidatorStake
+    minimumValidatorStake * BigInt("2")
   );
   await arlocal.mine();
 
@@ -343,7 +343,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-5"]),
-    minimumValidatorStake
+    minimumValidatorStake * BigInt("2")
   );
   await arlocal.mine();
 
@@ -352,7 +352,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-6"]),
-    minimumValidatorStake
+    minimumValidatorStake * BigInt("2")
   );
   await arlocal.mine();
 
@@ -361,7 +361,7 @@ async function run(args: CliArgs) {
     secrets.wallets["token-contract-owner"],
     tokenContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-7"]),
-    minimumValidatorStake
+    minimumValidatorStake * BigInt("2")
   );
   await arlocal.mine();
 
