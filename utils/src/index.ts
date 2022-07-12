@@ -556,7 +556,7 @@ async function run(args: CliArgs) {
   console.log(JSON.stringify(await warp.contract(tokenContractTxId).setEvaluationOptions({ internalWrites: true }).readState(), null, 4));
   console.log(JSON.stringify(await warp.contract(bundlersContractTxId).setEvaluationOptions({ internalWrites: true }).readState(), null, 4));
 
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   return {
     token: tokenContractTxId,
