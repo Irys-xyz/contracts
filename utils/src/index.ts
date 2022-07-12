@@ -6,7 +6,7 @@ import { Command } from "commander";
 
 import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
-import { Warp, WarpNodeFactory } from "warp-contracts";
+import { LoggerFactory, Warp, WarpNodeFactory } from "warp-contracts";
 
 import {
   connect as connectTokenContract,
@@ -49,6 +49,10 @@ function readSecrets(filepath: string): Promise<Secrets> {
   });
 }
 
+LoggerFactory.INST.logLevel("trace");
+LoggerFactory.INST.logLevel("trace", "WASM:Rust");
+LoggerFactory.INST.logLevel("trace", "WasmContractHandlerApi");
+
 type CliArgs = {
   gateway: string;
   secrets: string;
@@ -77,6 +81,9 @@ class ArLocal {
     if (this.arweave) {
       return this.arweave.api.get("mine");
     }
+  }
+  async mint(address: string) {
+    await this.arweave?.api.get(`mint/${address}/1000000000000000`);
   }
 }
 
@@ -262,7 +269,14 @@ async function run(args: CliArgs) {
 
   const warp = createWarpNode(args.arlocal, arweave);
 
+  console.log(args);
+  
+
   const arlocal = new ArLocal(args.arlocal ? arweave : undefined);
+
+  await Promise.all(Object.values(secrets.wallets).map(async(element: JWKInterface) => {
+    await arlocal.mint(await arweave.wallets.jwkToAddress(element));
+  }));
 
   const tokenContractTxId = await doTokenContractDeployment(
     warp,
@@ -271,7 +285,7 @@ async function run(args: CliArgs) {
     !args.arlocal
   );
 
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   const bundlersContractTxId = await doBundlersContractDeployment(
     warp,
@@ -282,7 +296,7 @@ async function run(args: CliArgs) {
     !args.arlocal
   );
 
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -291,7 +305,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"]),
     bundlerStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -300,7 +314,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"]),
     bundlerStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -309,7 +323,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-1"]),
     minimumValidatorStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -318,7 +332,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-2"]),
     minimumValidatorStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -327,7 +341,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-3"]),
     minimumValidatorStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -336,7 +350,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-4"]),
     minimumValidatorStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -345,7 +359,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-5"]),
     minimumValidatorStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -354,7 +368,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-6"]),
     minimumValidatorStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await transfer(
     warp,
@@ -363,7 +377,7 @@ async function run(args: CliArgs) {
     await arweave.wallets.jwkToAddress(secrets.wallets["validator-7"]),
     minimumValidatorStake * BigInt("2")
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await allowInteractions(
     warp,
@@ -371,14 +385,14 @@ async function run(args: CliArgs) {
     bundlersContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["bundler-1"])
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
   await allowInteractions(
     warp,
     secrets.wallets["bundlers-contract-owner"],
     bundlersContractTxId,
     await arweave.wallets.jwkToAddress(secrets.wallets["bundler-2"])
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await approve(
     warp,
@@ -387,7 +401,9 @@ async function run(args: CliArgs) {
     bundlersContractTxId,
     bundlerStake
   );
-  await arlocal.mine();
+  console.log("Approved 1");
+  
+  if (args.arlocal) await arlocal.mine();
   await approve(
     warp,
     secrets.wallets["bundler-2"],
@@ -395,12 +411,14 @@ async function run(args: CliArgs) {
     bundlersContractTxId,
     bundlerStake
   );
-  await arlocal.mine();
+  console.log("Approved 2");
+
+  if (args.arlocal) await arlocal.mine();
 
   await bundlersJoin(warp, secrets.wallets["bundler-1"], bundlersContractTxId);
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
   await bundlersJoin(warp, secrets.wallets["bundler-2"], bundlersContractTxId);
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   const validatorsContract1 = await doValidatorsContractDeployment(
     warp,
@@ -411,7 +429,7 @@ async function run(args: CliArgs) {
     minimumValidatorStake,
     !args.arlocal
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   const validatorsContract2 = await doValidatorsContractDeployment(
     warp,
@@ -422,7 +440,7 @@ async function run(args: CliArgs) {
     minimumValidatorStake,
     !args.arlocal
   );
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await Promise.all([
     approve(
@@ -475,7 +493,7 @@ async function run(args: CliArgs) {
       minimumValidatorStake
     ),
   ]);
-  await arlocal.mine();
+  if (args.arlocal) await arlocal.mine();
 
   await Promise.all([
     validatorJoin(
@@ -528,6 +546,16 @@ async function run(args: CliArgs) {
       new URL("https://7.example.com")
     ),
   ]);
+
+  LoggerFactory.INST.logLevel("fatal");
+  LoggerFactory.INST.logLevel("fatal", "WASM:Rust");
+  LoggerFactory.INST.logLevel("fatal", "WasmContractHandlerApi");
+
+  // console.log(await warp.contract(validatorsContract1).setEvaluationOptions({ internalWrites: true }).readState());
+  // console.log(await warp.contract(validatorsContract2).setEvaluationOptions({ internalWrites: true }).readState());
+  console.log(JSON.stringify(await warp.contract(tokenContractTxId).setEvaluationOptions({ internalWrites: true }).readState(), null, 4));
+  console.log(JSON.stringify(await warp.contract(bundlersContractTxId).setEvaluationOptions({ internalWrites: true }).readState(), null, 4));
+
   await arlocal.mine();
 
   return {
