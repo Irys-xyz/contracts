@@ -188,14 +188,15 @@ npx ts-node ts/tools.ts join \
 
 ### Scripted Test Setup
 
-Create secrets file with Mozilla SOPS
+Create secrets file with Mozilla SOPS. The following command expects that `validator` project can be found from parallel folder to this project.
 
 ```sh
+cd utils
 sh initialize-secrets.sh \
     <GPG_FINGERPRINT> \
-    ../secrets.test.yaml \
-    "../validator-rust/target/debug/wallet-tool create" \
-    "../validator-rust/target/debug/wallet-tool show-address"
+    ./secrets.test.yaml \
+    "../../validator/target/debug/wallet-tool create" \
+    "../../validator/target/debug/wallet-tool show-address"
 ```
 
 Deploy everything
