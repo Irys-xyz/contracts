@@ -2,7 +2,6 @@ import fs from "fs";
 
 import {
   ArWallet,
-  BundleInteractionResponse,
   Contract,
   ContractDeploy,
   HandlerBasedContract,
@@ -150,17 +149,22 @@ export interface ValidatorsContract extends Contract<State> {
   token(): Promise<string>;
   epoch(): Promise<{ seq: string; tx: string; height: string }>;
   epochDuration(): Promise<number>;
-  updateEpoch(): Promise<string | BundleInteractionResponse>;
-  join(stake: bigint, url: URL): Promise<string | BundleInteractionResponse>;
-  leave(): Promise<string | BundleInteractionResponse>;
-  proposeSlash(proposal: SlashProposal): Promise<string | BundleInteractionResponse>;
-  voteSlash(tx: string, vote: "for" | "against"): Promise<string | BundleInteractionResponse>;
+  updateEpoch(): Promise<string>;
+  join(stake: bigint, url: URL): Promise<string>;
+  leave(): Promise<string>;
+  proposeSlash(proposal: SlashProposal): Promise<string>;
+  voteSlash(tx: string, vote: "for" | "against"): Promise<string>;
 }
 
 class ValidatorsContractImpl
   extends HandlerBasedContract<State>
-  implements ValidatorsContract {
-  constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
+  implements ValidatorsContract
+{
+  constructor(
+    _contractTxId: string,
+    warp: Warp,
+    private _mainnet: boolean = false
+  ) {
     super(_contractTxId, warp);
   }
 
@@ -289,8 +293,20 @@ class ValidatorsContractImpl
     });
   }
 
-  write(input: any,): Promise<string | BundleInteractionResponse> {
-    return this._mainnet ? this.bundleInteraction(input) as Promise<BundleInteractionResponse> : this.writeInteraction(input) as Promise<string>;
+  write(input: any): Promise<string> {
+    return this._mainnet
+      ? this.bundleInteraction(input).then((response) => {
+          if (response) {
+            return response.originalTxId;
+          }
+          throw Error("Received 'null' as interaction response");
+        })
+      : this.writeInteraction(input).then((result) => {
+          if (result) {
+            return result;
+          }
+          throw Error("Received 'null' as interaction response");
+        });
   }
 }
 
@@ -305,13 +321,16 @@ export async function deploy(
   );
 
   // deploying contract using the new SDK.
-  return warp.createContract.deploy({
-    wallet: wallet,
-    initState: JSON.stringify(initialState),
-    src: contractSrc,
-    wasmSrcCodeDir: path.join(__dirname, "../src"),
-    wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
-  }, useBundler);
+  return warp.createContract.deploy(
+    {
+      wallet: wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, "../src"),
+      wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
+    },
+    useBundler
+  );
 }
 
 export async function connect(

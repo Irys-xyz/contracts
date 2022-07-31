@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ArWallet, Contract, HandlerBasedContract, Warp } from "warp-contracts";
+import {
+  ArWallet,
+  Contract,
+  ContractDeploy,
+  HandlerBasedContract,
+  Warp,
+} from "warp-contracts";
 
 export type TokenState = {
   ticker: string;
@@ -71,18 +77,22 @@ export interface TokenContract extends Contract<TokenState> {
   symbol(): Promise<string>;
   totalSupply(): Promise<bigint>;
 
-  approve(spender: string, value: bigint): Promise<string | null>;
-  burn(amount: bigint): Promise<string | null>;
-  burnFrom(from: string, amount: bigint): Promise<string | null>;
-  transfer(to: string, value: bigint): Promise<string | null>;
-  transferFrom(from: string, to: string, value: bigint): Promise<string | null>;
+  approve(spender: string, value: bigint): Promise<string>;
+  burn(amount: bigint): Promise<string>;
+  burnFrom(from: string, amount: bigint): Promise<string>;
+  transfer(to: string, value: bigint): Promise<string>;
+  transferFrom(from: string, to: string, value: bigint): Promise<string>;
 }
 
 class TokenContractImpl
   extends HandlerBasedContract<TokenState>
   implements TokenContract
 {
-  constructor(_contractTxId: string, warp: Warp, private _mainnet: boolean = false) {
+  constructor(
+    _contractTxId: string,
+    warp: Warp,
+    private _mainnet: boolean = false
+  ) {
     super(_contractTxId, warp);
   }
 
@@ -148,14 +158,14 @@ class TokenContractImpl
   }
 
   async burn(amount: bigint) {
-    return await this.write({
+    return this.write({
       function: "burn",
       amount: amount.toString(),
     });
   }
 
   async burnFrom(from: string, amount: BigInt) {
-    return await this.write({
+    return this.write({
       function: "burnFrom",
       from,
       amount: amount.toString(),
@@ -163,7 +173,7 @@ class TokenContractImpl
   }
 
   async transfer(to: string, value: bigint) {
-    return await this.write({
+    return this.write({
       function: "transfer",
       to,
       amount: value.toString(),
@@ -171,7 +181,7 @@ class TokenContractImpl
   }
 
   async transferFrom(from: string, to: string, value: BigInt) {
-    return await this.write({
+    return this.write({
       function: "transferFrom",
       from,
       to,
@@ -180,13 +190,13 @@ class TokenContractImpl
   }
 
   async approve(spender: string, value: BigInt) {
-    return await this.write({
+    return this.write({
       function: "approve",
       spender,
       amount: value.toString(),
     });
   }
-  
+
   async allowance(owner: string, spender: string) {
     const interactionResult = await this.viewState({
       function: "allowance",
@@ -206,8 +216,20 @@ class TokenContractImpl
     );
   }
 
-  write(input: any,): Promise<string | null> {
-    return this._mainnet ? this.bundleInteraction(input) : this.writeInteraction(input);
+  write(input: any): Promise<string> {
+    return this._mainnet
+      ? this.bundleInteraction(input).then((response) => {
+          if (response) {
+            return response.originalTxId;
+          }
+          throw Error("Received 'null' as interaction response");
+        })
+      : this.writeInteraction(input).then((result) => {
+          if (result) {
+            return result;
+          }
+          throw Error("Received 'null' as interaction response");
+        });
   }
 }
 
@@ -216,19 +238,22 @@ export function deploy(
   wallet: ArWallet,
   initialState: TokenState,
   useBundler: boolean = false
-): Promise<string> {
+): Promise<ContractDeploy> {
   let contractSrc = fs.readFileSync(
     path.join(__dirname, "../pkg/rust-contract_bg.wasm")
   );
 
   // deploying contract using the new SDK.
-  return warp.createContract.deploy({
-    wallet,
-    initState: JSON.stringify(initialState),
-    src: contractSrc,
-    wasmSrcCodeDir: path.join(__dirname, "../src"),
-    wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
-  }, useBundler);
+  return warp.createContract.deploy(
+    {
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, "../src"),
+      wasmGlueCode: path.join(__dirname, "../pkg/rust-contract.js"),
+    },
+    useBundler
+  );
 }
 
 export async function connect(

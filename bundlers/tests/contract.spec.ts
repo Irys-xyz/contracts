@@ -6,10 +6,10 @@ import Arweave from "arweave";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import {
   getTag,
-  LoggerFactory,
   Warp,
   WarpNodeFactory,
   SmartWeaveTags,
+  LoggerFactory,
 } from "warp-contracts";
 
 import {
@@ -21,6 +21,7 @@ import {
 
 import { addFunds, mineBlock } from "../ts/utils";
 import { connect, deploy, State, BundlersContract } from "../ts/contract";
+import { NetworkInfoInterface } from "arweave/node/network";
 
 jest.setTimeout(30000);
 
@@ -51,8 +52,8 @@ describe("Bundlers Contract", () => {
     });
 
     LoggerFactory.INST.logLevel("error");
-    LoggerFactory.INST.logLevel("debug", "WASM:Rust");
-    LoggerFactory.INST.logLevel("debug", "WasmContractHandlerApi");
+    // LoggerFactory.INST.logLevel("warn", "WASM:Rust");
+    // LoggerFactory.INST.logLevel("warn", "WasmContractHandlerApi");
 
     warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build();
 
@@ -91,7 +92,7 @@ describe("Bundlers Contract", () => {
       warp,
       accounts[0].wallet,
       initialTokenContractState
-    );
+    ).then((deployment) => deployment.contractTxId);
 
     const stateFromFile = JSON.parse(
       fs.readFileSync(path.join(__dirname, "./data/bundlers.json"), "utf8")
@@ -106,7 +107,9 @@ describe("Bundlers Contract", () => {
       ).toString(),
     };
 
-    contractTxId = await deploy(warp, accounts[0].wallet, initialState);
+    contractTxId = await deploy(warp, accounts[0].wallet, initialState).then(
+      (deployment) => deployment.contractTxId
+    );
     await mineBlock(arweave);
 
     console.log(`Contract TX ID: ${contractTxId}`);
@@ -282,7 +285,10 @@ describe("Bundlers Contract", () => {
     // FIXME: is there any better way to sync the state after mining?
     await connections[1].bundlers.currentState();
 
-    let networkInfo = connections[1].bundlers.getNetworkInfo();
+    // cast getNetworkInfo() result to ignore that it might return null
+    const networkInfo =
+      connections[1].bundlers.getNetworkInfo() as NetworkInfoInterface;
+
     expect(await connections[0].bundlers.bundlers()).toEqual(
       expect.objectContaining({
         // FIXME: why the bundlers map has strings as values instead of bigints
@@ -320,7 +326,9 @@ describe("Bundlers Contract", () => {
       accounts[1].address
     ];
 
-    let networkInfo = connections[1].bundlers.getNetworkInfo();
+    // cast getNetworkInfo() result to ignore that it might return null
+    let networkInfo =
+      connections[1].bundlers.getNetworkInfo() as NetworkInfoInterface;
 
     let blocksNeeded = Math.max(
       0,
