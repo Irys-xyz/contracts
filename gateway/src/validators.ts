@@ -13,6 +13,8 @@ async function create(
 ) {
   let contractConnection = await connect(warp, contract, wallet);
 
+  if (process.env.GW_STATE_ENDPOINT) await contractConnection.syncState(process.env.GW_STATE_ENDPOINT);
+
   const router = express.Router();
 
   router.get("/state", async (req: Request, res: Response) => {

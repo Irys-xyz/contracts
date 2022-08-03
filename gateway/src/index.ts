@@ -63,7 +63,7 @@ async function run(args: CliArgs) {
     protocol: arweaveUrl.protocol.split(":")[0], // URL holds colon at the end of the protocol
   });
 
-  let warp = WarpNodeFactory.fileCached(arweave, "cache");
+  let warp = (process.env.GW_STATE_ENDPOINT ? WarpNodeFactory.memCachedBased(arweave, 10) : WarpNodeFactory.fileCachedBased(arweave, "cache", 10)).useArweaveGateway().build()
 
   let appInstance = await app.create(
     arweave,
