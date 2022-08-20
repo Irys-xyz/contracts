@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-js-sys = "0.3.56"
+js-sys = { version = "0.3.56", optional = true }
 serde = { version = "1", features = ["derive"] }
-wasm-bindgen = { version = "= 0.2.79", features = ["serde-serialize"] }
-wasm-bindgen-futures = { version = "0.4.29" }
+wasm-bindgen = { version = "= 0.2.79", features = ["serde-serialize"], optional = true }
+wasm-bindgen-futures = { version = "0.4.29", optional = true }
+
+[features]
+default = []
+js-runtime = ["js-sys", "wasm-bindgen", "wasm-bindgen-futures"]
