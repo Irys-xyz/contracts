@@ -5,6 +5,7 @@
 use std::cell::RefCell;
 
 use serde_json::Error;
+
 use wasm_bindgen::prelude::*;
 
 use crate::action::{Action, QueryResponseMsg};

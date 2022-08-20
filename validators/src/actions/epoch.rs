@@ -4,11 +4,12 @@ use bundlr_contracts_shared::TransactionId;
 use rand_xoshiro::rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
-use bundlr_contracts_shared::{
-    contract_utils::js_imports::{Block, Transaction},
-    Address,
-};
+use bundlr_contracts_shared::Address;
 
+#[cfg(feature = "js-runtime")]
+use bundlr_contracts_shared::contract_utils::js_imports::{Block, Transaction};
+
+#[cfg(feature = "js-runtime")]
 use crate::{
     action::ActionResult, contract_utils::handler_result::HandlerResult, error::ContractError,
     state::State,
@@ -59,6 +60,7 @@ where
     addresses
 }
 
+#[cfg(feature = "js-runtime")]
 pub async fn update_epoch(mut state: State) -> ActionResult {
     if (Block::height() as u128) <= state.epoch.height {
         return Err(ContractError::UpdateEpochBlocked);

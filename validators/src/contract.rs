@@ -1,3 +1,4 @@
+#[cfg(feature = "js-runtime")]
 use bundlr_contracts_shared::contract_utils::js_imports::{Block, SmartWeave, Transaction};
 use bundlr_contracts_shared::{Address, TransactionId};
 
@@ -6,6 +7,7 @@ use crate::actions;
 use crate::error::ContractError;
 use crate::state::State;
 
+#[cfg(feature = "js-runtime")]
 pub async fn handle(current_state: State, action: Action) -> ActionResult {
     let caller = SmartWeave::caller()
         .parse::<Address>()

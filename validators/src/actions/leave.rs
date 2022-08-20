@@ -1,7 +1,14 @@
-use bundlr_contracts_shared::{contract_utils::js_imports::SmartWeave, Address, Amount};
+use bundlr_contracts_shared::{Address, Amount};
+
 use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "js-runtime")]
+use bundlr_contracts_shared::contract_utils::js_imports::SmartWeave;
+
+#[cfg(feature = "js-runtime")]
 use wasm_bindgen::JsValue;
 
+#[cfg(feature = "js-runtime")]
 use crate::{
     action::ActionResult, contract_utils::handler_result::HandlerResult, error::ContractError,
     state::State,
@@ -20,6 +27,7 @@ struct Result {
     result_type: String,
 }
 
+#[cfg(feature = "js-runtime")]
 pub async fn leave(mut state: State) -> ActionResult {
     let caller = SmartWeave::caller()
         .parse::<Address>()

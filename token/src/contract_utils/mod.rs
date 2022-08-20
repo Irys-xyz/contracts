@@ -2,6 +2,8 @@
 /////////////// DO NOT MODIFY THIS FILE /////////////
 /////////////////////////////////////////////////////
 
+#[cfg(feature = "js-runtime")]
 pub mod entrypoint;
 pub mod handler_result;
+#[cfg(feature = "js-runtime")]
 pub mod js_imports;
