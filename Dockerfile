@@ -5,6 +5,7 @@ WORKDIR ./validators
 
 COPY ./validators/ts/contract.ts ./ts/contract.ts
 COPY ./validators/package.json  ./package.json
+COPY ./validators/yarn.lock ./yarn.lock
 RUN yarn 
 
 WORKDIR ../gateway
